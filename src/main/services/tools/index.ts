@@ -6,5 +6,6 @@ import './edit';
 import './list-dir';
 import './search';
 import './shell';
+import './skill';
 
 export { toolRegistry } from './registry';

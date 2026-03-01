@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Session, Message, Part, AppConfig, StreamEvent, Workspace, WorkspaceData } from '../../shared/types';
+import type { Session, Message, Part, AppConfig, StreamEvent, Workspace, WorkspaceData, Skill } from '../../shared/types';
 
 interface AppState {
   // Workspace
@@ -18,6 +18,10 @@ interface AppState {
 
   // Config
   config: AppConfig | null;
+
+  // Skills
+  skills: Skill[];
+  commandPaletteOpen: boolean;
 
   // Workspace Actions
   setWorkspace: (data: WorkspaceData | null) => void;
@@ -40,6 +44,12 @@ interface AppState {
 
   // Message Actions
   addMessage: (sessionId: string, message: Message) => void;
+
+  // Skill Actions
+  setSkills: (skills: Skill[]) => void;
+  loadSkills: () => Promise<void>;
+  openCommandPalette: () => void;
+  closeCommandPalette: () => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -52,6 +62,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   pendingMessageId: null,
   pendingParts: [],
   config: null,
+  skills: [],
+  commandPaletteOpen: false,
 
   // =====================
   // Workspace Actions
@@ -307,4 +319,23 @@ export const useAppStore = create<AppState>((set, get) => ({
           state.currentSessionId === sessionId ? newSession : state.currentSession,
       };
     }),
+
+  // =====================
+  // Skill Actions
+  // =====================
+
+  setSkills: (skills) => set({ skills }),
+
+  loadSkills: async () => {
+    try {
+      const skills = await window.manong.skill.list();
+      set({ skills });
+    } catch (error) {
+      console.error('Failed to load skills:', error);
+    }
+  },
+
+  openCommandPalette: () => set({ commandPaletteOpen: true }),
+
+  closeCommandPalette: () => set({ commandPaletteOpen: false }),
 }));

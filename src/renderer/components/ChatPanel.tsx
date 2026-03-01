@@ -5,6 +5,8 @@ import { MessageItem } from './MessageItem';
 import type { Message } from '../../shared/types';
 import { v4 as uuidv4 } from 'uuid';
 
+const SLASH_COMMAND_PATTERN = /^\/(\w+)(?:\s+(.*))?$/;
+
 export const ChatPanel: React.FC = () => {
   const {
     currentSession,
@@ -13,9 +15,11 @@ export const ChatPanel: React.FC = () => {
     pendingMessageId,
     pendingParts,
     config,
+    skills,
     updateSession,
     startStreaming,
     handleStreamEvent,
+    loadSkills,
   } = useAppStore();
 
   const [input, setInput] = useState('');
@@ -50,13 +54,62 @@ export const ChatPanel: React.FC = () => {
     return unsubscribe;
   }, [handleStreamEvent]);
 
+  useEffect(() => {
+    loadSkills();
+  }, [loadSkills, currentWorkspace]);
+
   const handleSend = async () => {
     if (!input.trim() || isStreaming || !currentSession || !currentWorkspace) return;
+
+    const trimmedInput = input.trim();
+    const slashMatch = trimmedInput.match(SLASH_COMMAND_PATTERN);
+
+    if (slashMatch) {
+      const [, skillName, args = ''] = slashMatch;
+      const skill = skills.find(s => s.name === skillName);
+
+      if (skill) {
+        const result = await window.manong.skill.execute(skillName, args);
+
+        if (result.success && result.prompt) {
+          const userMessage: Message = {
+            id: uuidv4(),
+            role: 'user',
+            parts: [{ type: 'text', text: `/${skillName}${args ? ' ' + args : ''}` }],
+            createdAt: Date.now(),
+          };
+
+          const updatedSession = {
+            ...currentSession,
+            messages: [...currentSession.messages, userMessage],
+            updatedAt: Date.now(),
+          };
+          updateSession(updatedSession);
+
+          const providerConfig = config?.providers.find(
+            (p) => p.name === config.defaultProvider
+          );
+
+          const messageId = uuidv4();
+          startStreaming(messageId);
+
+          window.manong.agent.start(
+            currentSession.id,
+            result.prompt,
+            providerConfig,
+            currentWorkspace.path
+          );
+
+          setInput('');
+          return;
+        }
+      }
+    }
 
     const userMessage: Message = {
       id: uuidv4(),
       role: 'user',
-      parts: [{ type: 'text', text: input.trim() }],
+      parts: [{ type: 'text', text: trimmedInput }],
       createdAt: Date.now(),
     };
 
@@ -76,7 +129,7 @@ export const ChatPanel: React.FC = () => {
 
     window.manong.agent.start(
       currentSession.id,
-      input.trim(),
+      trimmedInput,
       providerConfig,
       currentWorkspace.path
     );

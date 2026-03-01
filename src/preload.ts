@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from './shared/ipc';
-import type { Session, StreamEvent, AppConfig, Workspace, WorkspaceData } from './shared/types';
+import type { Session, StreamEvent, AppConfig, Workspace, WorkspaceData, Skill, SkillExecuteResult } from './shared/types';
 
 const api = {
   agent: {
@@ -100,6 +100,18 @@ const api = {
     },
     close: () => {
       ipcRenderer.send(IPC_CHANNELS.WINDOW_CLOSE);
+    },
+  },
+
+  skill: {
+    list: (): Promise<Skill[]> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.SKILL_LIST);
+    },
+    get: (name: string): Promise<Skill | undefined> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.SKILL_GET, name);
+    },
+    execute: (name: string, args: string): Promise<SkillExecuteResult> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.SKILL_EXECUTE, name, args);
     },
   },
 };

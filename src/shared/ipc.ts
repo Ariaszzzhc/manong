@@ -34,4 +34,9 @@ export const IPC_CHANNELS = {
   WINDOW_MINIMIZE: 'window:minimize',
   WINDOW_MAXIMIZE: 'window:maximize',
   WINDOW_CLOSE: 'window:close',
+
+  // Skills
+  SKILL_LIST: 'skill:list',
+  SKILL_GET: 'skill:get',
+  SKILL_EXECUTE: 'skill:execute',
 } as const;

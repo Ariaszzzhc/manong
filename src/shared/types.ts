@@ -134,3 +134,19 @@ export const DEFAULT_CONFIG: AppConfig = {
   defaultProvider: '',
   theme: 'dark',
 };
+
+// Skill types
+export interface Skill {
+  name: string
+  description: string
+  template: string
+  source: 'builtin' | 'global' | 'project'
+  agent?: string
+  hints: string[]
+}
+
+export interface SkillExecuteResult {
+  success: boolean
+  prompt?: string
+  error?: string
+}

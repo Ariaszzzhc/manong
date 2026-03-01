@@ -7,6 +7,7 @@ import type {
 } from '../../shared/types';
 import { AgentLoop } from '../services/agent/loop';
 import { storageService } from '../services/storage';
+import { skillService } from '../services/skill';
 import '../services/tools'; // Register tools
 
 const agentLoops = new Map<string, AgentLoop>();
@@ -202,5 +203,24 @@ export function setupIPC(mainWindow: BrowserWindow): void {
 
   ipcMain.on(IPC_CHANNELS.WINDOW_CLOSE, () => {
     mainWindow.close();
+  });
+
+  // =====================
+  // Skills
+  // =====================
+
+  ipcMain.handle(IPC_CHANNELS.SKILL_LIST, async () => {
+    const workspacePath = storageService.getCurrentWorkspacePath();
+    return skillService.loadSkills(workspacePath || undefined);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.SKILL_GET, async (_event, name: string) => {
+    const workspacePath = storageService.getCurrentWorkspacePath();
+    return skillService.getSkill(name, workspacePath || undefined);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.SKILL_EXECUTE, async (_event, name: string, args: string) => {
+    const workspacePath = storageService.getCurrentWorkspacePath();
+    return skillService.executeSkill(name, args, workspacePath || undefined);
   });
 }
