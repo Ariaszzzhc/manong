@@ -6,6 +6,13 @@ export const IPC_CHANNELS = {
   AGENT_STOP: 'agent:stop',
   AGENT_STREAM: 'agent:stream',
 
+  // Workspace management
+  WORKSPACE_OPEN: 'workspace:open',
+  WORKSPACE_OPEN_PATH: 'workspace:open-path',
+  WORKSPACE_GET_CURRENT: 'workspace:get-current',
+  WORKSPACE_GET_RECENT: 'workspace:get-recent',
+  WORKSPACE_REMOVE_RECENT: 'workspace:remove-recent',
+
   // Session management
   SESSION_CREATE: 'session:create',
   SESSION_LIST: 'session:list',

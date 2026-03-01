@@ -1,8 +1,12 @@
 import { create } from 'zustand';
-import type { Session, Message, Part, AppConfig, StreamEvent } from '../../shared/types';
+import type { Session, Message, Part, AppConfig, StreamEvent, Workspace, WorkspaceData } from '../../shared/types';
 
 interface AppState {
-  // Sessions
+  // Workspace
+  currentWorkspace: Workspace | null;
+  currentWorkspacePath: string | null;
+
+  // Sessions (current workspace's)
   sessions: Session[];
   currentSessionId: string | null;
   currentSession: Session | null;
@@ -15,25 +19,32 @@ interface AppState {
   // Config
   config: AppConfig | null;
 
-  // Actions
+  // Workspace Actions
+  setWorkspace: (data: WorkspaceData | null) => void;
+  clearWorkspace: () => void;
+
+  // Session Actions
   setSessions: (sessions: Session[]) => void;
   setCurrentSession: (session: Session | null) => void;
   addSession: (session: Session) => void;
   updateSession: (session: Session) => void;
   deleteSession: (sessionId: string) => void;
 
+  // Config Actions
   setConfig: (config: AppConfig) => void;
 
-  // Streaming
+  // Streaming Actions
   startStreaming: (messageId: string) => void;
   handleStreamEvent: (event: StreamEvent) => void;
   stopStreaming: () => void;
 
-  // Messages
+  // Message Actions
   addMessage: (sessionId: string, message: Message) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
+  currentWorkspace: null,
+  currentWorkspacePath: null,
   sessions: [],
   currentSessionId: null,
   currentSession: null,
@@ -41,6 +52,45 @@ export const useAppStore = create<AppState>((set, get) => ({
   pendingMessageId: null,
   pendingParts: [],
   config: null,
+
+  // =====================
+  // Workspace Actions
+  // =====================
+
+  setWorkspace: (data) => {
+    if (!data) {
+      set({
+        currentWorkspace: null,
+        currentWorkspacePath: null,
+        sessions: [],
+        currentSession: null,
+        currentSessionId: null,
+      });
+      return;
+    }
+
+    set({
+      currentWorkspace: data.workspace,
+      currentWorkspacePath: data.workspace.path,
+      sessions: data.sessions,
+      currentSession: data.sessions[0] || null,
+      currentSessionId: data.sessions[0]?.id || null,
+    });
+  },
+
+  clearWorkspace: () => {
+    set({
+      currentWorkspace: null,
+      currentWorkspacePath: null,
+      sessions: [],
+      currentSession: null,
+      currentSessionId: null,
+    });
+  },
+
+  // =====================
+  // Session Actions
+  // =====================
 
   setSessions: (sessions) => set({ sessions }),
 
@@ -77,7 +127,15 @@ export const useAppStore = create<AppState>((set, get) => ({
       };
     }),
 
+  // =====================
+  // Config Actions
+  // =====================
+
   setConfig: (config) => set({ config }),
+
+  // =====================
+  // Streaming Actions
+  // =====================
 
   startStreaming: (messageId) =>
     set({
@@ -90,20 +148,17 @@ export const useAppStore = create<AppState>((set, get) => ({
     const state = get();
 
     if (event.type === 'message-start') {
-      // Reset streaming state for new assistant message
       set({
         isStreaming: true,
         pendingMessageId: event.messageId,
         pendingParts: [],
       });
     } else if (event.type === 'message-continue') {
-      // Continue streaming after tool use - keep pendingParts, just update messageId
       set({
         isStreaming: true,
         pendingMessageId: event.messageId,
       });
     } else if (event.type === 'text-delta') {
-      // Update pending text part
       set((state) => {
         const parts = [...state.pendingParts];
         const textPartIdx = parts.findIndex((p) => p.type === 'text');
@@ -118,7 +173,6 @@ export const useAppStore = create<AppState>((set, get) => ({
         return { pendingParts: parts };
       });
     } else if (event.type === 'thinking-delta') {
-      // Update pending thinking part
       set((state) => {
         const parts = [...state.pendingParts];
         const thinkingPartIdx = parts.findIndex((p) => p.type === 'thinking');
@@ -158,7 +212,6 @@ export const useAppStore = create<AppState>((set, get) => ({
         ],
       }));
     } else if (event.type === 'message-complete') {
-      // Add pending message to session
       const session = state.currentSession;
       if (session && state.pendingMessageId) {
         const message: Message = {
@@ -168,14 +221,12 @@ export const useAppStore = create<AppState>((set, get) => ({
           createdAt: Date.now(),
         };
 
-        // Auto-generate title from first user message
         let title = session.title;
-        if (session.title === 'New Chat' && session.messages.length > 0) {
+        if (session.title === 'New Session' && session.messages.length > 0) {
           const firstUserMsg = session.messages.find((m) => m.role === 'user');
           if (firstUserMsg) {
             const textPart = firstUserMsg.parts.find((p) => p.type === 'text');
             if (textPart && textPart.type === 'text') {
-              // Generate title: first 30 chars, remove newlines
               title = textPart.text.replace(/\n/g, ' ').slice(0, 30).trim();
               if (textPart.text.length > 30) title += '...';
             }
@@ -189,7 +240,6 @@ export const useAppStore = create<AppState>((set, get) => ({
           updatedAt: Date.now(),
         };
 
-        // Persist to main process
         window.manong.session.update(updatedSession);
 
         set({
@@ -208,6 +258,22 @@ export const useAppStore = create<AppState>((set, get) => ({
         pendingMessageId: null,
         pendingParts: [],
       });
+    } else if (event.type === 'usage') {
+      const session = state.currentSession;
+      if (session && event.usage) {
+        const updatedSession = {
+          ...session,
+          tokenUsage: event.usage,
+          lastUsage: event.lastUsage,
+        };
+
+        set({
+          currentSession: updatedSession,
+          sessions: state.sessions.map((s) =>
+            s.id === updatedSession.id ? updatedSession : s
+          ),
+        });
+      }
     }
   },
 
@@ -217,6 +283,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       pendingMessageId: null,
       pendingParts: [],
     }),
+
+  // =====================
+  // Message Actions
+  // =====================
 
   addMessage: (sessionId, message) =>
     set((state) => {

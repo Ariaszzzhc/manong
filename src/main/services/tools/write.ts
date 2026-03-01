@@ -3,6 +3,9 @@ import { defineTool, type ToolContext } from '../../../shared/tool';
 import { toolRegistry } from './registry';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { createLogger } from '../logger';
+
+const log = createLogger('write_file');
 
 const WriteFileSchema = z.object({
   file_path: z.string().describe('The path to the file to write'),
@@ -39,8 +42,6 @@ export const writeFileTool = defineTool({
         ? params.file_path
         : path.join(context.workingDir, params.file_path);
 
-      console.log('[write_file] Writing file:', filePath);
-
       // Ensure directory exists
       const dir = path.dirname(filePath);
       await fs.mkdir(dir, { recursive: true });
@@ -53,7 +54,7 @@ export const writeFileTool = defineTool({
       };
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.log('[write_file] Error:', errorMsg);
+      log.error('Error writing file:', errorMsg);
       return {
         success: false,
         output: `Error: ${errorMsg}`,

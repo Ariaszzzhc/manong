@@ -3,6 +3,9 @@ import { defineTool, type ToolContext } from '../../../shared/tool';
 import { toolRegistry } from './registry';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { createLogger } from '../logger';
+
+const log = createLogger('read_file');
 
 const ReadFileSchema = z.object({
   file_path: z.string().describe('The path to the file to read'),
@@ -33,8 +36,6 @@ export const readFileTool = defineTool({
         ? params.file_path
         : path.join(context.workingDir, params.file_path);
 
-      console.log('[read_file] Reading file:', filePath);
-
       const content = await fs.readFile(filePath, 'utf-8');
       const lines = content.split('\n');
 
@@ -52,7 +53,7 @@ export const readFileTool = defineTool({
       };
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.log('[read_file] Error:', errorMsg);
+      log.error('Error reading file:', errorMsg);
       return {
         success: false,
         output: `Error: ${errorMsg}`,

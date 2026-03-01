@@ -5,7 +5,7 @@ export const Sidebar: React.FC = () => {
   const { sessions, currentSessionId, setCurrentSession, deleteSession } =
     useAppStore();
 
-  const handleNewChat = async () => {
+  const handleNewSession = async () => {
     const session = await window.manong.session.create();
     useAppStore.getState().addSession(session);
   };
@@ -44,7 +44,7 @@ export const Sidebar: React.FC = () => {
       {/* Header */}
       <div className="p-4 border-b border-zinc-800">
         <button
-          onClick={handleNewChat}
+          onClick={handleNewSession}
           className="w-full py-2 px-4 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
         >
           <svg
@@ -60,7 +60,7 @@ export const Sidebar: React.FC = () => {
               d="M12 4v16m8-8H4"
             />
           </svg>
-          New Chat
+          New Session
         </button>
       </div>
 

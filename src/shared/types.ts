@@ -1,5 +1,19 @@
 // Core message types shared between main and renderer processes
 
+export interface TokenUsage {
+  inputTokens: number;
+  outputTokens: number;
+  cacheCreationInputTokens: number;
+  cacheReadInputTokens: number;
+}
+
+export const DEFAULT_TOKEN_USAGE: TokenUsage = {
+  inputTokens: 0,
+  outputTokens: 0,
+  cacheCreationInputTokens: 0,
+  cacheReadInputTokens: 0,
+};
+
 export interface TextPart {
   type: 'text';
   text: string;
@@ -47,9 +61,23 @@ export interface Session {
   id: string;
   title: string;
   messages: Message[];
-  workingDir: string | null;
   createdAt: number;
   updatedAt: number;
+  tokenUsage: TokenUsage;
+  lastUsage?: TokenUsage;
+}
+
+// Workspace - represents a working directory context
+export interface Workspace {
+  path: string;           // Directory path, acts as unique identifier
+  name: string;           // Display name (directory name)
+  lastOpenedAt: number;   // Last opened timestamp
+}
+
+// WorkspaceData - workspace with its sessions
+export interface WorkspaceData {
+  workspace: Workspace;
+  sessions: Session[];
 }
 
 // Stream events for IPC communication
@@ -61,6 +89,7 @@ export type StreamEventType =
   | 'message-start'
   | 'message-continue'
   | 'message-complete'
+  | 'usage'
   | 'error';
 
 export interface StreamEvent {
@@ -76,6 +105,9 @@ export interface StreamEvent {
   // For tool-result
   result?: unknown;
   isError?: boolean;
+  // For usage event
+  usage?: TokenUsage;
+  lastUsage?: TokenUsage;
   // For error
   error?: string;
 }

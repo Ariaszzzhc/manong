@@ -1,6 +1,4 @@
 import { ipcMain, dialog, BrowserWindow } from 'electron';
-import Store from 'electron-store';
-import { v4 as uuidv4 } from 'uuid';
 import { IPC_CHANNELS } from '../../shared/ipc';
 import type {
   Session,
@@ -8,81 +6,130 @@ import type {
   AppConfig,
 } from '../../shared/types';
 import { AgentLoop } from '../services/agent/loop';
+import { storageService } from '../services/storage';
 import '../services/tools'; // Register tools
 
-const store = new Store<{ config: AppConfig }>();
-const sessions = new Map<string, Session>();
 const agentLoops = new Map<string, AgentLoop>();
 
 export function setupIPC(mainWindow: BrowserWindow): void {
   const agentLoop = new AgentLoop(mainWindow);
   agentLoops.set('default', agentLoop);
 
-  // Config management
-  ipcMain.handle(IPC_CHANNELS.CONFIG_GET, () => {
-    return store.get('config', {
-      providers: [],
-      defaultProvider: '',
-      theme: 'system',
-    } as AppConfig);
+  // =====================
+  // Workspace Management
+  // =====================
+
+  ipcMain.handle(IPC_CHANNELS.WORKSPACE_OPEN, async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openDirectory'],
+    });
+
+    const path = result.filePaths[0];
+    if (!path) return null;
+
+    // Get existing workspace or create new one
+    let data = storageService.getWorkspace(path);
+    if (!data) {
+      data = storageService.createWorkspace(path);
+    } else {
+      // Update last opened time
+      storageService.addRecentWorkspace(path, data.workspace.name);
+      storageService.setCurrentWorkspacePath(path);
+    }
+
+    return data;
   });
 
-  ipcMain.handle(IPC_CHANNELS.CONFIG_SET, (_event, config: Partial<AppConfig>) => {
-    const current = store.get('config', {
-      providers: [],
-      defaultProvider: '',
-      theme: 'system',
-    } as AppConfig);
-    store.set('config', { ...current, ...config });
+  ipcMain.handle(IPC_CHANNELS.WORKSPACE_OPEN_PATH, async (_event, path: string) => {
+    // Get existing workspace or create new one
+    let data = storageService.getWorkspace(path);
+    if (!data) {
+      data = storageService.createWorkspace(path);
+    } else {
+      // Update last opened time
+      storageService.addRecentWorkspace(path, data.workspace.name);
+      storageService.setCurrentWorkspacePath(path);
+    }
+
+    return data;
   });
 
-  // Session management
-  ipcMain.handle(IPC_CHANNELS.SESSION_CREATE, (_event, workingDir?: string) => {
-    const session: Session = {
-      id: uuidv4(),
-      title: 'New Chat',
-      messages: [],
-      workingDir: workingDir || null,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    sessions.set(session.id, session);
-    return session;
+  ipcMain.handle(IPC_CHANNELS.WORKSPACE_GET_CURRENT, () => {
+    const path = storageService.getCurrentWorkspacePath();
+    if (!path) return null;
+    return storageService.getWorkspace(path) || null;
+  });
+
+  ipcMain.handle(IPC_CHANNELS.WORKSPACE_GET_RECENT, () => {
+    return storageService.getRecentWorkspaces();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.WORKSPACE_REMOVE_RECENT, (_event, path: string) => {
+    storageService.removeRecentWorkspace(path);
+  });
+
+  // =====================
+  // Session Management
+  // =====================
+
+  ipcMain.handle(IPC_CHANNELS.SESSION_CREATE, () => {
+    const workspacePath = storageService.getCurrentWorkspacePath();
+    if (!workspacePath) {
+      throw new Error('No workspace selected');
+    }
+    return storageService.createSession(workspacePath);
   });
 
   ipcMain.handle(IPC_CHANNELS.SESSION_LIST, () => {
-    return Array.from(sessions.values());
+    const workspacePath = storageService.getCurrentWorkspacePath();
+    if (!workspacePath) return [];
+    return storageService.getSessions(workspacePath);
   });
 
   ipcMain.handle(IPC_CHANNELS.SESSION_GET, (_event, sessionId: string) => {
-    return sessions.get(sessionId);
+    const workspacePath = storageService.getCurrentWorkspacePath();
+    if (!workspacePath) return undefined;
+    return storageService.getSession(workspacePath, sessionId);
   });
 
   ipcMain.handle(IPC_CHANNELS.SESSION_DELETE, (_event, sessionId: string) => {
-    sessions.delete(sessionId);
+    const workspacePath = storageService.getCurrentWorkspacePath();
+    if (!workspacePath) return;
+    storageService.deleteSession(workspacePath, sessionId);
   });
 
   ipcMain.handle(IPC_CHANNELS.SESSION_UPDATE, (_event, session: Session) => {
-    session.updatedAt = Date.now();
-    sessions.set(session.id, session);
+    const workspacePath = storageService.getCurrentWorkspacePath();
+    if (!workspacePath) {
+      throw new Error('No workspace selected');
+    }
+    storageService.saveSession(workspacePath, session);
     return session;
   });
 
-  // Agent control
+  // =====================
+  // Agent Control
+  // =====================
+
   ipcMain.on(
     IPC_CHANNELS.AGENT_START,
     (
       _event,
-      { sessionId, message, providerConfig }: { sessionId: string; message: string; providerConfig: AppConfig['providers'][0] }
+      { sessionId, message, providerConfig, workspacePath }: {
+        sessionId: string;
+        message: string;
+        providerConfig: AppConfig['providers'][0];
+        workspacePath: string;
+      }
     ) => {
-      const session = sessions.get(sessionId);
+      const session = storageService.getSession(workspacePath, sessionId);
       if (!session) return;
 
       if (providerConfig) {
         agentLoop.setProvider(providerConfig);
       }
 
-      agentLoop.start(session, message, (event: StreamEvent) => {
+      agentLoop.start(session, workspacePath, message, (event: StreamEvent) => {
         mainWindow.webContents.send(IPC_CHANNELS.AGENT_STREAM, event);
       });
     }
@@ -92,7 +139,22 @@ export function setupIPC(mainWindow: BrowserWindow): void {
     agentLoop.stop();
   });
 
-  // File system
+  // =====================
+  // Config Management
+  // =====================
+
+  ipcMain.handle(IPC_CHANNELS.CONFIG_GET, () => {
+    return storageService.getConfig();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.CONFIG_SET, (_event, config: Partial<AppConfig>) => {
+    storageService.setConfig(config);
+  });
+
+  // =====================
+  // File System
+  // =====================
+
   ipcMain.handle(IPC_CHANNELS.FS_OPEN_FOLDER, async () => {
     const result = await dialog.showOpenDialog(mainWindow, {
       properties: ['openDirectory'],
@@ -122,7 +184,10 @@ export function setupIPC(mainWindow: BrowserWindow): void {
     }));
   });
 
-  // Window controls
+  // =====================
+  // Window Controls
+  // =====================
+
   ipcMain.on(IPC_CHANNELS.WINDOW_MINIMIZE, () => {
     mainWindow.minimize();
   });

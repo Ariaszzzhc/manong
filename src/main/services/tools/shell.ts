@@ -2,6 +2,9 @@ import { z } from 'zod';
 import { defineTool, type ToolContext } from '../../../shared/tool';
 import { toolRegistry } from './registry';
 import { spawn } from 'child_process';
+import { createLogger } from '../logger';
+
+const log = createLogger('run_shell');
 
 const RunShellSchema = z.object({
   command: z.string().describe('The shell command to execute'),
@@ -30,8 +33,6 @@ export const runShellTool = defineTool({
       };
     }
 
-    console.log('[run_shell] Executing command:', params.command);
-
     return new Promise((resolve) => {
       const timeout = params.timeout ?? 60000;
 
@@ -54,7 +55,6 @@ export const runShellTool = defineTool({
       proc.on('close', (code) => {
         const output =
           stdout + (stderr ? `\n[stderr]\n${stderr}` : '');
-        console.log('[run_shell] Command completed:', { code, outputLength: output.length });
         resolve({
           success: code === 0,
           output: output || `Process exited with code ${code}`,
@@ -63,7 +63,7 @@ export const runShellTool = defineTool({
       });
 
       proc.on('error', (error) => {
-        console.log('[run_shell] Error:', error.message);
+        log.error('Error executing command:', error.message);
         resolve({
           success: false,
           output: `Error: ${error.message}`,

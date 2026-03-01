@@ -3,6 +3,9 @@ import { defineTool, type ToolContext } from '../../../shared/tool';
 import { toolRegistry } from './registry';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { createLogger } from '../logger';
+
+const log = createLogger('edit_file');
 
 const EditFileSchema = z.object({
   file_path: z.string().describe('The path to the file to edit'),
@@ -51,8 +54,6 @@ export const editFileTool = defineTool({
         ? params.file_path
         : path.join(context.workingDir, params.file_path);
 
-      console.log('[edit_file] Editing file:', filePath);
-
       const content = await fs.readFile(filePath, 'utf-8');
 
       if (!content.includes(params.old_string)) {
@@ -75,7 +76,7 @@ export const editFileTool = defineTool({
       };
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.log('[edit_file] Error:', errorMsg);
+      log.error('Error editing file:', errorMsg);
       return {
         success: false,
         output: `Error: ${errorMsg}`,

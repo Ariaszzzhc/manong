@@ -1,10 +1,18 @@
 import React from 'react';
 import { useAppStore } from '../stores/app';
 
+const formatTokens = (count: number): string => {
+  if (count >= 1000000) {
+    return `${(count / 1000000).toFixed(1)}M`;
+  } else if (count >= 1000) {
+    return `${(count / 1000).toFixed(1)}K`;
+  }
+  return count.toString();
+};
+
 export const InfoPanel: React.FC = () => {
   const { currentSession, isStreaming } = useAppStore();
 
-  // Count tool calls
   const toolCalls = currentSession?.messages.reduce((acc, msg) => {
     return (
       acc +
@@ -14,19 +22,23 @@ export const InfoPanel: React.FC = () => {
     );
   }, 0);
 
+  const tokenUsage = currentSession?.tokenUsage;
+  const lastUsage = currentSession?.lastUsage;
+
+  const totalTokens = tokenUsage
+    ? tokenUsage.inputTokens + tokenUsage.outputTokens
+    : 0;
+
+  const contextTokens = lastUsage
+    ? lastUsage.inputTokens + lastUsage.outputTokens +
+      lastUsage.cacheCreationInputTokens + lastUsage.cacheReadInputTokens
+    : 0;
+
   return (
     <div className="w-72 bg-zinc-900 border-l border-zinc-800 p-4 overflow-y-auto">
       <h3 className="text-sm font-semibold text-zinc-400 uppercase mb-4">
         Session Info
       </h3>
-
-      {/* Working Directory */}
-      <div className="mb-6">
-        <label className="text-xs text-zinc-500 uppercase">Working Directory</label>
-        <div className="mt-1 text-sm text-zinc-300 font-mono break-all">
-          {currentSession?.workingDir || 'Not set'}
-        </div>
-      </div>
 
       {/* Stats */}
       <div className="mb-6">
@@ -44,6 +56,46 @@ export const InfoPanel: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Token Usage - Cumulative */}
+      <div className="mb-6">
+        <label className="text-xs text-zinc-500 uppercase">Cumulative Usage</label>
+        <div className="mt-2 space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-zinc-400">Input</span>
+            <span className="text-zinc-300">
+              {formatTokens(tokenUsage?.inputTokens ?? 0)}
+            </span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-zinc-400">Output</span>
+            <span className="text-zinc-300">
+              {formatTokens(tokenUsage?.outputTokens ?? 0)}
+            </span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-zinc-400 font-medium">Total</span>
+            <span className="text-zinc-200 font-medium">
+              {formatTokens(totalTokens)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Token Usage - Current Context */}
+      {lastUsage && (
+        <div className="mb-6">
+          <label className="text-xs text-zinc-500 uppercase">Current Context</label>
+          <div className="mt-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-zinc-400">Tokens</span>
+              <span className="text-zinc-200 font-medium">
+                {formatTokens(contextTokens)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Status */}
       <div className="mb-6">

@@ -4,10 +4,14 @@ import type {
   Message,
   StreamEvent,
   ProviderConfig,
-} from '../../shared/types';
+} from '../../../shared/types';
+import { DEFAULT_TOKEN_USAGE } from '../../../shared/types';
 import { AnthropicProvider } from '../provider/anthropic';
 import { toolRegistry } from '../tools';
 import type { BrowserWindow } from 'electron';
+import { createLogger } from '../logger';
+
+const log = createLogger('AgentLoop');
 
 const SYSTEM_PROMPT = `You are Manong, an interactive CLI tool that helps users with software engineering tasks. Use the instructions below and the tools available to you to assist the user.
 
@@ -82,7 +86,8 @@ export class AgentLoop {
   private provider: AnthropicProvider | null = null;
   private abortController: AbortController | null = null;
   private stepCount = 0;
-  private modelName: string = '';
+  private modelName = '';
+  private workingDir = '';
 
   constructor(private mainWindow: BrowserWindow) {}
 
@@ -93,11 +98,10 @@ export class AgentLoop {
 
   async start(
     session: Session,
+    workingDir: string,
     userMessage: string,
     onEvent: (event: StreamEvent) => void
   ): Promise<void> {
-    console.log('[AgentLoop] start called:', { userMessage, sessionId: session.id });
-
     if (!this.provider) {
       onEvent({
         type: 'error',
@@ -110,6 +114,7 @@ export class AgentLoop {
 
     this.abortController = new AbortController();
     this.stepCount = 0;
+    this.workingDir = workingDir;
 
     // Only add user message if there's actual content (not a continuation after tool use)
     if (userMessage.trim()) {
@@ -121,7 +126,6 @@ export class AgentLoop {
         createdAt: Date.now(),
       };
       session.messages.push(userMsg);
-      console.log('[AgentLoop] Added user message:', userMsgId);
     }
 
     await this.processAssistantResponse(session, onEvent);
@@ -130,10 +134,9 @@ export class AgentLoop {
   private async processAssistantResponse(
     session: Session,
     onEvent: (event: StreamEvent) => void,
-    isContinuation: boolean = false
+    isContinuation = false
   ): Promise<void> {
     this.stepCount++;
-    console.log('[AgentLoop] processAssistantResponse:', { isContinuation, messageCount: session.messages.length, stepCount: this.stepCount });
 
     const assistantMsgId = uuidv4();
     const assistantMsg: Message = {
@@ -145,7 +148,6 @@ export class AgentLoop {
 
     // Notify message start or continue
     const eventType = isContinuation ? 'message-continue' : 'message-start';
-    console.log('[AgentLoop] Sending event:', eventType, assistantMsgId);
     onEvent({
       type: eventType,
       sessionId: session.id,
@@ -163,7 +165,7 @@ export class AgentLoop {
 
       // Build system prompt
       const systemPrompt = SYSTEM_PROMPT
-        .replace('{{WORKING_DIR}}', session.workingDir || 'not set')
+        .replace('{{WORKING_DIR}}', this.workingDir || 'not set')
         .replace('{{PLATFORM}}', process.platform)
         .replace('{{DATE}}', new Date().toDateString())
         .replace('{{MODEL}}', this.modelName);
@@ -175,7 +177,7 @@ export class AgentLoop {
       const effectiveTools = isLastStep ? [] : tools;
 
       if (isLastStep) {
-        console.log('[AgentLoop] Max steps reached, disabling tools');
+        log.warn('Max steps reached, disabling tools');
       }
 
       const stream = this.provider.stream(
@@ -252,13 +254,34 @@ export class AgentLoop {
             toolName: event.toolName,
             args: event.args as Record<string, unknown>,
           });
+        } else if (event.type === 'usage') {
+          if (!session.tokenUsage) {
+            session.tokenUsage = { ...DEFAULT_TOKEN_USAGE };
+          }
+          session.tokenUsage.inputTokens += event.usage.inputTokens;
+          session.tokenUsage.outputTokens += event.usage.outputTokens;
+          session.tokenUsage.cacheCreationInputTokens += event.usage.cacheCreationInputTokens;
+          session.tokenUsage.cacheReadInputTokens += event.usage.cacheReadInputTokens;
+
+          session.lastUsage = {
+            inputTokens: event.usage.inputTokens,
+            outputTokens: event.usage.outputTokens,
+            cacheCreationInputTokens: event.usage.cacheCreationInputTokens,
+            cacheReadInputTokens: event.usage.cacheReadInputTokens,
+          };
+
+          onEvent({
+            type: 'usage',
+            sessionId: session.id,
+            messageId: assistantMsgId,
+            usage: session.tokenUsage,
+            lastUsage: session.lastUsage,
+          });
         }
       }
 
       // Execute tool calls
       if (toolCalls.length > 0) {
-        console.log('[AgentLoop] Tool calls detected:', toolCalls.length, toolCalls.map(t => t.toolName));
-
         // Add the assistant message with tool calls to session
         session.messages.push(assistantMsg);
 
@@ -267,7 +290,7 @@ export class AgentLoop {
           const tool = toolRegistry.get(tc.toolName);
           if (!tool) {
             const result = `Tool "${tc.toolName}" not found`;
-            console.log('[AgentLoop] Tool not found:', tc.toolName);
+            log.error('Tool not found:', tc.toolName);
             onEvent({
               type: 'tool-result',
               sessionId: session.id,
@@ -281,11 +304,9 @@ export class AgentLoop {
           }
 
           try {
-            console.log('[AgentLoop] Executing tool:', tc.toolName, tc.args);
             const result = await tool.execute(tc.args as never, {
-              workingDir: session.workingDir!,
+              workingDir: this.workingDir,
             });
-            console.log('[AgentLoop] Tool result:', tc.toolName, { success: result.success, outputLength: result.output?.length });
 
             onEvent({
               type: 'tool-result',
@@ -311,11 +332,10 @@ export class AgentLoop {
               createdAt: Date.now(),
             };
             session.messages.push(toolResultMsg);
-            console.log('[AgentLoop] Added tool result message to session');
           } catch (error) {
             const errorMessage =
               error instanceof Error ? error.message : 'Unknown error';
-            console.log('[AgentLoop] Tool error:', tc.toolName, errorMessage);
+            log.error('Tool error:', tc.toolName, errorMessage);
             onEvent({
               type: 'tool-result',
               sessionId: session.id,
@@ -343,14 +363,12 @@ export class AgentLoop {
           }
         }
 
-        console.log('[AgentLoop] All tools executed, continuing conversation. Session messages:', session.messages.length);
         // Continue the conversation to get the assistant's response to tool results
         await this.processAssistantResponse(session, onEvent, true);
         return;
       }
 
       // No tool calls - add assistant message to session
-      console.log('[AgentLoop] No tool calls, completing message');
       session.messages.push(assistantMsg);
 
       // Notify message complete

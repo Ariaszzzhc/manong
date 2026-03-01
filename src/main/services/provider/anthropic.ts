@@ -1,8 +1,11 @@
 import { Anthropic } from '@anthropic-ai/sdk';
-import type { ProviderConfig, Message } from '../../shared/types';
-import type { ToolDefinition } from '../../shared/tool';
+import type { ProviderConfig, Message, TokenUsage } from '../../../shared/types';
+import type { ToolDefinition } from '../../../shared/tool';
 import { z } from 'zod';
 import { toJSONSchema } from 'zod/v4/core';
+import { createLogger } from '../logger';
+
+const log = createLogger('AnthropicProvider');
 
 export class AnthropicProvider {
   private client: Anthropic;
@@ -26,6 +29,7 @@ export class AnthropicProvider {
     | { type: 'text-delta'; delta: string }
     | { type: 'thinking-delta'; delta: string }
     | { type: 'tool-call'; toolCallId: string; toolName: string; args: unknown }
+    | { type: 'usage'; usage: TokenUsage }
   > {
     // Convert messages to Anthropic format
     const anthropicMessages = this.convertMessages(messages);
@@ -36,15 +40,6 @@ export class AnthropicProvider {
       description: tool.description,
       input_schema: zodToAnthropicSchema(tool.parameters),
     }));
-
-    console.log('[AnthropicProvider] Sending request:', {
-      model: this.model,
-      messageCount: anthropicMessages.length,
-      toolCount: anthropicTools.length,
-      enableThinking: this.config.enableThinking,
-      tools: JSON.stringify(anthropicTools, null, 2),
-      messages: JSON.stringify(anthropicMessages, null, 2),
-    });
 
     const requestOptions: Anthropic.Messages.MessageCreateParams = {
       model: this.model,
@@ -113,14 +108,8 @@ export class AnthropicProvider {
               args = JSON.parse(block.jsonBuffer);
             }
           } catch (e) {
-            console.error('[AnthropicProvider] Failed to parse tool args:', e, 'JSON:', block.jsonBuffer);
+            log.error('Failed to parse tool args:', e, 'JSON:', block.jsonBuffer);
           }
-
-          console.log('[AnthropicProvider] Tool call:', {
-            id: block.id,
-            name: block.name,
-            args,
-          });
 
           yield {
             type: 'tool-call',
@@ -134,7 +123,17 @@ export class AnthropicProvider {
       }
     }
 
-    console.log('[AnthropicProvider] Stream complete');
+    const finalMessage = await stream.finalMessage();
+    yield {
+      type: 'usage',
+      usage: {
+        inputTokens: finalMessage.usage.input_tokens,
+        outputTokens: finalMessage.usage.output_tokens,
+        cacheCreationInputTokens: finalMessage.usage.cache_creation_input_tokens ?? 0,
+        cacheReadInputTokens: finalMessage.usage.cache_read_input_tokens ?? 0,
+      },
+    };
+
   }
 
   private convertMessages(messages: Message[]): Anthropic.Messages.MessageParam[] {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../stores/app';
 
 export const TitleBar: React.FC = () => {
-  const { config, setConfig } = useAppStore();
+  const { config, setConfig, currentWorkspace, setWorkspace } = useAppStore();
   const [showSettings, setShowSettings] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [modelName, setModelName] = useState('claude-sonnet-4-20250514');
@@ -10,17 +10,13 @@ export const TitleBar: React.FC = () => {
   const [enableThinking, setEnableThinking] = useState(false);
 
   useEffect(() => {
-    // Load config on mount
-    window.manong.config.get().then((cfg) => {
-      setConfig(cfg);
-      if (cfg.providers.length > 0) {
-        setApiKey(cfg.providers[0].apiKey);
-        setModelName(cfg.providers[0].model);
-        setBaseURL(cfg.providers[0].baseURL);
-        setEnableThinking(cfg.providers[0].enableThinking ?? false);
-      }
-    });
-  }, [setConfig]);
+    if (config && config.providers.length > 0) {
+      setApiKey(config.providers[0].apiKey);
+      setModelName(config.providers[0].model);
+      setBaseURL(config.providers[0].baseURL);
+      setEnableThinking(config.providers[0].enableThinking ?? false);
+    }
+  }, [config]);
 
   const handleSaveConfig = async () => {
     const newConfig = {
@@ -42,6 +38,13 @@ export const TitleBar: React.FC = () => {
     setShowSettings(false);
   };
 
+  const handleSwitchWorkspace = async () => {
+    const data = await window.manong.workspace.open();
+    if (data) {
+      setWorkspace(data);
+    }
+  };
+
   return (
     <>
       <div className="title-bar h-10 bg-zinc-900 flex items-center border-b border-zinc-800 relative">
@@ -50,9 +53,34 @@ export const TitleBar: React.FC = () => {
           {/* Traffic light space */}
         </div>
 
-        {/* Center - App name */}
-        <div className="flex-1 flex items-center justify-center">
+        {/* Center - Workspace name or App name */}
+        <div className="flex-1 flex items-center justify-center gap-2">
           <span className="text-zinc-300 font-semibold">Manong</span>
+          {currentWorkspace && (
+            <>
+              <span className="text-zinc-600">/</span>
+              <button
+                onClick={handleSwitchWorkspace}
+                className="flex items-center gap-1 text-zinc-400 hover:text-zinc-200 transition-colors"
+                title="Switch workspace"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                  />
+                </svg>
+                <span className="text-sm">{currentWorkspace.name}</span>
+              </button>
+            </>
+          )}
         </div>
 
         {/* Right - Settings */}

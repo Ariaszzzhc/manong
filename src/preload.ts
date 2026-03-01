@@ -1,18 +1,20 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from './shared/ipc';
-import type { Session, StreamEvent, AppConfig } from './shared/types';
+import type { Session, StreamEvent, AppConfig, Workspace, WorkspaceData } from './shared/types';
 
 const api = {
   agent: {
     start: (
       sessionId: string,
       message: string,
-      providerConfig?: AppConfig['providers'][0]
+      providerConfig: AppConfig['providers'][0] | undefined,
+      workspacePath: string
     ) => {
       ipcRenderer.send(IPC_CHANNELS.AGENT_START, {
         sessionId,
         message,
         providerConfig,
+        workspacePath,
       });
     },
     stop: () => {
@@ -27,9 +29,27 @@ const api = {
     },
   },
 
+  workspace: {
+    open: (): Promise<WorkspaceData | null> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.WORKSPACE_OPEN);
+    },
+    openPath: (path: string): Promise<WorkspaceData | null> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.WORKSPACE_OPEN_PATH, path);
+    },
+    getCurrent: (): Promise<WorkspaceData | null> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.WORKSPACE_GET_CURRENT);
+    },
+    getRecent: (): Promise<Workspace[]> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.WORKSPACE_GET_RECENT);
+    },
+    removeRecent: (path: string): Promise<void> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.WORKSPACE_REMOVE_RECENT, path);
+    },
+  },
+
   session: {
-    create: (workingDir?: string): Promise<Session> => {
-      return ipcRenderer.invoke(IPC_CHANNELS.SESSION_CREATE, workingDir);
+    create: (): Promise<Session> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.SESSION_CREATE);
     },
     list: (): Promise<Session[]> => {
       return ipcRenderer.invoke(IPC_CHANNELS.SESSION_LIST);

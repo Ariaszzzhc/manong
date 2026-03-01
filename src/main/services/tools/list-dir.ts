@@ -3,6 +3,9 @@ import { defineTool, type ToolContext } from '../../../shared/tool';
 import { toolRegistry } from './registry';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { createLogger } from '../logger';
+
+const log = createLogger('list_dir');
 
 const ListDirSchema = z.object({
   path: z.string().optional().describe('The path to the directory to list. Defaults to current working directory.'),
@@ -22,8 +25,6 @@ export const listDirTool = defineTool({
         ? (path.isAbsolute(params.path) ? params.path : path.join(context.workingDir, params.path))
         : context.workingDir;
 
-      console.log('[list_dir] Listing directory:', dirPath);
-
       const entries = await fs.readdir(dirPath, { withFileTypes: true });
       const lines = entries.map((entry) => {
         const prefix = entry.isDirectory() ? '📁 ' : '📄 ';
@@ -36,7 +37,7 @@ export const listDirTool = defineTool({
       };
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.log('[list_dir] Error:', errorMsg);
+      log.error('Error listing directory:', errorMsg);
       return {
         success: false,
         output: `Error: ${errorMsg}`,

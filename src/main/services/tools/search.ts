@@ -3,6 +3,9 @@ import { defineTool, type ToolContext } from '../../../shared/tool';
 import { toolRegistry } from './registry';
 import { glob } from 'glob';
 import * as path from 'path';
+import { createLogger } from '../logger';
+
+const log = createLogger('search_file');
 
 const SearchFileSchema = z.object({
   pattern: z.string().describe('Glob pattern to search for files'),
@@ -36,8 +39,6 @@ export const searchFileTool = defineTool({
           : path.join(context.workingDir, params.path)
         : context.workingDir;
 
-      console.log('[search_file] Searching:', { pattern: params.pattern, path: searchPath });
-
       const files = await glob(params.pattern, {
         cwd: searchPath,
         nodir: true,
@@ -56,7 +57,7 @@ export const searchFileTool = defineTool({
       };
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.log('[search_file] Error:', errorMsg);
+      log.error('Error searching files:', errorMsg);
       return {
         success: false,
         output: `Error: ${errorMsg}`,
