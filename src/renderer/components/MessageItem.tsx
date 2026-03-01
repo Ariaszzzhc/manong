@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import { Copy, Check, Loader2 } from 'lucide-react';
+import hljs from 'highlight.js';
 import type { Message, Part } from '../../shared/types';
 import { ToolGroupCollapse } from './ToolGroupCollapse';
 import { ThinkingCollapse } from './ThinkingCollapse';
+import { MermaidBlock } from './MermaidBlock';
+import 'highlight.js/styles/github-dark.css';
+import 'katex/dist/katex.min.css';
 
 interface MessageItemProps {
   message: Message;
@@ -56,7 +62,45 @@ export const MessageItem: React.FC<MessageItemProps> = ({
                 <div key={idx} className={`prose prose-invert max-w-none ${
                   isUser ? 'text-text-primary' : 'text-text-primary'
                 }`}>
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm, remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
+                    components={{
+                      pre: ({ children }) => {
+                        const codeElement = React.Children.toArray(children).find(
+                          (child) => React.isValidElement(child) && child.type === 'code'
+                        ) as React.ReactElement<{ className?: string; children?: React.ReactNode }> | undefined;
+
+                        if (!codeElement) {
+                          return <pre>{children}</pre>;
+                        }
+
+                        const className = codeElement.props.className || '';
+                        const match = /language-(\w+)/.exec(className);
+                        const lang = match ? match[1] : '';
+
+                        // Extract code string from children
+                        const extractText = (node: React.ReactNode): string => {
+                          if (typeof node === 'string') return node;
+                          if (typeof node === 'number') return String(node);
+                          if (Array.isArray(node)) return node.map(extractText).join('');
+                          if (React.isValidElement(node) && node.props.children) {
+                            return extractText(node.props.children);
+                          }
+                          return '';
+                        };
+                        const codeString = extractText(codeElement.props.children).replace(/\n$/, '');
+
+                        // Mermaid diagram
+                        if (lang === 'mermaid') {
+                          return <MermaidBlock code={codeString} />;
+                        }
+
+                        // Code block with copy button
+                        return <CodeBlock code={codeString} language={lang} />;
+                      },
+                    }}
+                  >
                     {part.text}
                   </ReactMarkdown>
                 </div>
@@ -78,15 +122,30 @@ export const MessageItem: React.FC<MessageItemProps> = ({
   );
 };
 
-// Code block component with copy button
+// Code block component with copy button and syntax highlighting
 interface CodeBlockProps {
   filename?: string;
   code: string;
   language?: string;
 }
 
-export const CodeBlock: React.FC<CodeBlockProps> = ({ filename, code }) => {
+export const CodeBlock: React.FC<CodeBlockProps> = ({ filename, code, language }) => {
   const [copied, setCopied] = useState(false);
+
+  const highlightedCode = useMemo(() => {
+    if (language && hljs.getLanguage(language)) {
+      try {
+        return hljs.highlight(code, { language }).value;
+      } catch {
+        // Fall back to auto-detection
+      }
+    }
+    try {
+      return hljs.highlightAuto(code).value;
+    } catch {
+      return code;
+    }
+  }, [code, language]);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(code);
@@ -97,7 +156,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ filename, code }) => {
   return (
     <div className="relative group/code my-4">
       {/* Copy button */}
-      <div className="absolute right-2 top-2 opacity-0 group-hover/code:opacity-100 transition-opacity">
+      <div className="absolute right-2 top-2 opacity-0 group-hover/code:opacity-100 transition-opacity z-10">
         <button
           onClick={handleCopy}
           className="text-xs bg-surface text-text-secondary px-2 py-1 rounded border border-border hover:text-text-primary flex items-center gap-1"
@@ -108,17 +167,20 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ filename, code }) => {
       </div>
 
       <div className="bg-surface border border-border rounded-md overflow-hidden font-mono text-xs leading-5">
-        {/* Filename header */}
-        {filename && (
+        {/* Header with language or filename */}
+        {(filename || language) && (
           <div className="flex border-b border-border px-3 py-1.5 bg-surface text-text-secondary text-[10px]">
-            <span>{filename}</span>
+            <span>{filename || language}</span>
           </div>
         )}
 
-        {/* Code content */}
+        {/* Code content with syntax highlighting */}
         <div className="p-4 overflow-x-auto">
           <pre>
-            <code>{code}</code>
+            <code
+              className={language ? `language-${language}` : ''}
+              dangerouslySetInnerHTML={{ __html: highlightedCode }}
+            />
           </pre>
         </div>
       </div>

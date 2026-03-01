@@ -129,6 +129,85 @@ code, pre, .font-mono {
   border: none;
 }
 
+/* Code syntax highlighting (highlight.js) */
+.hljs {
+  background: var(--code-background);
+  color: var(--text-primary);
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: #6a737d;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-section,
+.hljs-link {
+  color: #ff7b72;
+}
+
+.hljs-string,
+.hljs-title,
+.hljs-name,
+.hljs-type,
+.hljs-attribute,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition,
+.hljs-variable,
+.hljs-template-tag,
+.hljs-template-variable {
+  color: #a5d6ff;
+}
+
+.hljs-function,
+.hljs-built_in,
+.hljs-number {
+  color: #79c0ff;
+}
+
+.hljs-deletion {
+  color: #ffa198;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
+}
+
+/* KaTeX math formula styling */
+.katex {
+  font-size: 1.1em;
+}
+
+.katex-display {
+  margin: 1rem 0;
+  overflow-x: auto;
+  padding: 0.5rem 0;
+}
+
+.katex-display > .katex {
+  text-align: left;
+}
+
+/* Mermaid diagram styling */
+.mermaid-diagram {
+  background: var(--surface);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+}
+
+.mermaid-diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
 /* Animation for streaming */
 @keyframes pulse {
   0%, 100% {
