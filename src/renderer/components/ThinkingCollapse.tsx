@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ChevronRight, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -28,23 +29,20 @@ export const ThinkingCollapse: React.FC<ThinkingCollapseProps> = ({
     <div className="thinking-collapse mb-3">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-zinc-300 transition-colors"
+        className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
       >
-        <svg
-          className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-90' : ''}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-        <span>Thinking</span>
+        <ChevronRight
+          size={12}
+          className={`transition-transform ${isOpen ? 'rotate-90' : ''}`}
+          strokeWidth={1.5}
+        />
         {isStreaming && (
-          <span className="thinking-indicator ml-1">...</span>
+          <Loader2 size={12} className="text-primary animate-spin" strokeWidth={1.5} />
         )}
+        <span className="font-mono text-xs">Thinking</span>
       </button>
       {isOpen && (
-        <div className="mt-2 pl-4 text-sm text-zinc-400 italic border-l-2 border-zinc-700">
+        <div className="mt-2 pl-4 text-sm text-text-secondary italic border-l-2 border-primary/30">
           <div className="prose prose-invert prose-sm max-w-none">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {text}

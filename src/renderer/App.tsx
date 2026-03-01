@@ -1,13 +1,27 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { TitleBar } from './components/TitleBar';
+import { NavigationBar } from './components/NavigationBar';
 import { Sidebar } from './components/Sidebar';
 import { ChatPanel } from './components/ChatPanel';
-import { InfoPanel } from './components/InfoPanel';
 import { WelcomePage } from './components/WelcomePage';
+import { SettingsModal } from './components/SettingsModal';
 import { useAppStore } from './stores/app';
+import { themes, applyTheme } from './themes';
+import type { ThemeName } from './themes';
 
 export const App: React.FC = () => {
-  const { currentWorkspace, setWorkspace, setConfig } = useAppStore();
+  const { currentWorkspace, setWorkspace, config, setConfig } = useAppStore();
+  const [showSettings, setShowSettings] = useState(false);
+
+  // Apply theme when config changes
+  useEffect(() => {
+    if (config?.theme) {
+      const themeName = config.theme as ThemeName;
+      if (themes[themeName]) {
+        applyTheme(themes[themeName]);
+      }
+    }
+  }, [config?.theme]);
 
   useEffect(() => {
     // Load config
@@ -22,19 +36,21 @@ export const App: React.FC = () => {
   }, [setConfig, setWorkspace]);
 
   return (
-    <div className="h-screen flex flex-col bg-zinc-950 text-white">
+    <div className="h-screen flex flex-col bg-background text-text-primary font-display antialiased">
       <TitleBar />
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex flex-1 h-[calc(100vh-2.5rem)] overflow-hidden">
         {currentWorkspace ? (
           <>
+            <NavigationBar onOpenSettings={() => setShowSettings(true)} />
             <Sidebar />
             <ChatPanel />
-            <InfoPanel />
           </>
         ) : (
           <WelcomePage />
         )}
       </div>
+
+      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </div>
   );
 };

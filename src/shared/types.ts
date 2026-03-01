@@ -126,11 +126,11 @@ export interface ProviderConfig {
 export interface AppConfig {
   providers: ProviderConfig[];
   defaultProvider: string;
-  theme: 'light' | 'dark' | 'system';
+  theme: 'light' | 'dark';
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
   providers: [],
   defaultProvider: '',
-  theme: 'system',
+  theme: 'dark',
 };

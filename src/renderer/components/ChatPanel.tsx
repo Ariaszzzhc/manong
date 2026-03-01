@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { PlusCircle, Image, Terminal, ArrowUp } from 'lucide-react';
 import { useAppStore } from '../stores/app';
 import { MessageItem } from './MessageItem';
 import type { Message } from '../../shared/types';
@@ -84,7 +85,7 @@ export const ChatPanel: React.FC = () => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       handleSend();
     }
@@ -92,16 +93,16 @@ export const ChatPanel: React.FC = () => {
 
   if (!currentSession) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-zinc-950 text-zinc-500">
+      <div className="flex-1 flex items-center justify-center bg-background text-text-secondary">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-zinc-300 mb-4">No Session</h2>
-          <p className="mb-4">Select a session or create a new one</p>
+          <h2 className="text-2xl font-bold text-text-primary mb-4">No Session</h2>
+          <p className="mb-4 text-sm">Select a session or create a new one</p>
           <button
             onClick={async () => {
               const session = await window.manong.session.create();
               useAppStore.getState().addSession(session);
             }}
-            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
+            className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded transition-colors text-sm"
           >
             New Session
           </button>
@@ -111,7 +112,7 @@ export const ChatPanel: React.FC = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-zinc-950">
+    <main className="flex-1 flex flex-col bg-background">
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
         {currentSession.messages.map((message) => (
@@ -136,7 +137,7 @@ export const ChatPanel: React.FC = () => {
       </div>
 
       {/* Input */}
-      <div className="border-t border-zinc-800 p-4">
+      <div className="border-t border-border p-4">
         <div className="max-w-3xl mx-auto">
           <div className="relative">
             <textarea
@@ -144,36 +145,53 @@ export const ChatPanel: React.FC = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Send a message..."
-              className="w-full bg-zinc-800 text-white rounded-lg px-4 py-3 pr-12 resize-none focus:outline-none focus:ring-2 focus:ring-zinc-600 disabled:opacity-50"
+              placeholder="Type a command or ask a question..."
+              className="w-full bg-surface text-text-primary rounded-lg px-4 py-3 pr-12 resize-none focus:outline-none focus:ring-1 focus:ring-primary border border-border disabled:opacity-50"
               rows={1}
               disabled={isStreaming}
             />
             <button
               onClick={handleSend}
               disabled={!input.trim() || isStreaming}
-              className="absolute right-2 bottom-2 p-2 text-zinc-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              className="absolute right-2 bottom-2 p-2 text-text-secondary hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              title="Send message"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                />
-              </svg>
+              <ArrowUp size={20} strokeWidth={1.5} />
             </button>
           </div>
-          <div className="mt-2 text-xs text-zinc-500">
-            Press Enter to send, Shift+Enter for new line
+
+          {/* Bottom toolbar */}
+          <div className="flex items-center justify-between pt-2 mt-1">
+            {/* Left buttons */}
+            <div className="flex items-center gap-4">
+              <button
+                className="text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1.5 text-xs font-mono group"
+                title="Add Context"
+              >
+                <PlusCircle size={16} className="group-hover:scale-110 transition-transform" strokeWidth={1.5} />
+                <span>Context</span>
+              </button>
+              <button
+                className="text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1.5 text-xs font-mono group"
+                title="Upload Image"
+              >
+                <Image size={16} className="group-hover:scale-110 transition-transform" strokeWidth={1.5} />
+              </button>
+              <button
+                className="text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1.5 text-xs font-mono group"
+                title="Terminal Command"
+              >
+                <Terminal size={16} className="group-hover:scale-110 transition-transform" strokeWidth={1.5} />
+              </button>
+            </div>
+
+            {/* Right: hint */}
+            <span className="text-[10px] text-text-secondary font-mono">
+              CTRL + ENTER
+            </span>
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 };

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { Copy, Check, Loader2 } from 'lucide-react';
 import type { Message, Part } from '../../shared/types';
 import { ToolGroupCollapse } from './ToolGroupCollapse';
 import { ThinkingCollapse } from './ThinkingCollapse';
@@ -31,29 +32,15 @@ export const MessageItem: React.FC<MessageItemProps> = ({
 
   return (
     <div
-      className={`py-4 px-6 ${isUser ? 'bg-transparent' : 'bg-zinc-800/50'}`}
+      className={`py-4 px-6 ${
+        isUser
+          ? 'bg-transparent'
+          : 'bg-surface/50 border-l-2 border-primary/50'
+      }`}
     >
       <div className="max-w-3xl mx-auto">
-        {/* Role indicator */}
-        <div className="flex items-center gap-2 mb-2">
-          <div
-            className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${isUser ? 'bg-blue-600 text-white' : 'bg-orange-600 text-white'
-              }`}
-          >
-            {isUser ? 'U' : 'M'}
-          </div>
-          <span className="text-sm font-medium text-zinc-400">
-            {isUser ? 'You' : 'Manong'}
-          </span>
-          {/* {isStreaming && (
-            <span className="text-xs text-zinc-500 streaming-indicator">
-              thinking...
-            </span>
-          )} */}
-        </div>
-
         {/* Content */}
-        <div className="pl-8">
+        <div>
           {/* Thinking section - collapsible */}
           {thinkingText && (
             <ThinkingCollapse text={thinkingText} isStreaming={isStreaming} />
@@ -66,7 +53,9 @@ export const MessageItem: React.FC<MessageItemProps> = ({
           {textParts.map((part, idx) => {
             if (part.type === 'text') {
               return (
-                <div key={idx} className="prose prose-invert max-w-none">
+                <div key={idx} className={`prose prose-invert max-w-none ${
+                  isUser ? 'text-text-primary' : 'text-text-primary'
+                }`}>
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {part.text}
                   </ReactMarkdown>
@@ -78,10 +67,59 @@ export const MessageItem: React.FC<MessageItemProps> = ({
 
           {/* Show typing indicator if streaming with no text/thinking yet */}
           {isStreaming && !thinkingText && parts.every((p) => p.type !== 'text' || !p.text) && (
-            <div className="text-zinc-500 text-sm streaming-indicator">
-              Waiting for response...
+            <div className="flex items-center gap-2 text-text-secondary text-sm">
+              <Loader2 size={14} className="animate-spin text-primary" />
+              <span>Waiting for response...</span>
             </div>
           )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Code block component with copy button
+interface CodeBlockProps {
+  filename?: string;
+  code: string;
+  language?: string;
+}
+
+export const CodeBlock: React.FC<CodeBlockProps> = ({ filename, code }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="relative group/code my-4">
+      {/* Copy button */}
+      <div className="absolute right-2 top-2 opacity-0 group-hover/code:opacity-100 transition-opacity">
+        <button
+          onClick={handleCopy}
+          className="text-xs bg-surface text-text-secondary px-2 py-1 rounded border border-border hover:text-text-primary flex items-center gap-1"
+        >
+          {copied ? <Check size={12} strokeWidth={1.5} /> : <Copy size={12} strokeWidth={1.5} />}
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+      </div>
+
+      <div className="bg-surface border border-border rounded-md overflow-hidden font-mono text-xs leading-5">
+        {/* Filename header */}
+        {filename && (
+          <div className="flex border-b border-border px-3 py-1.5 bg-surface text-text-secondary text-[10px]">
+            <span>{filename}</span>
+          </div>
+        )}
+
+        {/* Code content */}
+        <div className="p-4 overflow-x-auto">
+          <pre>
+            <code>{code}</code>
+          </pre>
         </div>
       </div>
     </div>
