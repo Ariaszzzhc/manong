@@ -6,6 +6,23 @@ interface ToolPartViewProps {
   part: Part;
 }
 
+const isMCPTool = (toolName: string): boolean => {
+  return toolName.startsWith('mcp__');
+};
+
+const formatToolName = (toolName: string): { display: string; server?: string } => {
+  if (isMCPTool(toolName)) {
+    const parts = toolName.split('__');
+    if (parts.length >= 3) {
+      return {
+        display: parts.slice(2).join('__'),
+        server: parts[1],
+      };
+    }
+  }
+  return { display: toolName };
+};
+
 export const ToolPartView: React.FC<ToolPartViewProps> = ({ part }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -14,6 +31,9 @@ export const ToolPartView: React.FC<ToolPartViewProps> = ({ part }) => {
   }
 
   if (part.type === 'tool-call') {
+    const { display, server } = formatToolName(part.toolName);
+    const isMCP = isMCPTool(part.toolName);
+
     return (
       <div className="my-1 border border-border rounded overflow-hidden">
         <div
@@ -25,8 +45,13 @@ export const ToolPartView: React.FC<ToolPartViewProps> = ({ part }) => {
           ) : (
             <ChevronRight size={12} className="text-text-secondary" strokeWidth={1.5} />
           )}
-          <Wrench size={12} className="text-text-secondary" strokeWidth={1.5} />
-          <span className="font-mono text-xs text-text-primary">{part.toolName}</span>
+          <Wrench size={12} className={isMCP ? 'text-primary' : 'text-text-secondary'} strokeWidth={1.5} />
+          <span className="font-mono text-xs text-text-primary">{display}</span>
+          {isMCP && server && (
+            <span className="text-[10px] px-1.5 py-0.5 bg-primary/20 text-primary rounded font-mono">
+              MCP: {server}
+            </span>
+          )}
         </div>
         {isExpanded && (
           <div className="bg-surface-elevated px-3 py-2 border-t border-border">
@@ -40,6 +65,9 @@ export const ToolPartView: React.FC<ToolPartViewProps> = ({ part }) => {
   }
 
   if (part.type === 'tool-result') {
+    const { display, server } = formatToolName(part.toolName);
+    const isMCP = isMCPTool(part.toolName);
+
     return (
       <div
         className={`my-1 border rounded overflow-hidden ${
@@ -64,7 +92,12 @@ export const ToolPartView: React.FC<ToolPartViewProps> = ({ part }) => {
           ) : (
             <CheckCircle size={12} className="text-accent-green" strokeWidth={1.5} />
           )}
-          <span className="font-mono text-xs text-text-primary">Result: {part.toolName}</span>
+          <span className="font-mono text-xs text-text-primary">Result: {display}</span>
+          {isMCP && server && (
+            <span className="text-[10px] px-1.5 py-0.5 bg-primary/20 text-primary rounded font-mono">
+              MCP: {server}
+            </span>
+          )}
         </div>
         {isExpanded && (
           <div className="bg-surface-elevated px-3 py-2 border-t border-border">

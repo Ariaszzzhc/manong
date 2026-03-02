@@ -44,4 +44,16 @@ export const IPC_CHANNELS = {
   QUESTION_ASK: 'question:ask',
   QUESTION_ANSWER: 'question:answer',
   QUESTION_SKIP: 'question:skip',
+
+  // MCP (Model Context Protocol)
+  MCP_GET_STATUS: 'mcp:get-status',
+  MCP_CONNECT: 'mcp:connect',
+  MCP_DISCONNECT: 'mcp:disconnect',
+  MCP_GET_CONFIG: 'mcp:get-config',
+  MCP_SAVE_CONFIG: 'mcp:save-config',
+  MCP_GET_LAYERED_CONFIG: 'mcp:get-layered-config',
+  MCP_SAVE_GLOBAL_CONFIG: 'mcp:save-global-config',
+  MCP_SAVE_PROJECT_CONFIG: 'mcp:save-project-config',
+  MCP_SET_WORKSPACE: 'mcp:set-workspace',
+  MCP_STATUS_CHANGED: 'mcp:status-changed',
 } as const;

@@ -6,9 +6,11 @@ import type {
   AppConfig,
   QuestionAnswer,
 } from '../../shared/types';
+import type { MCPConfig, MCPServerStatus, LayeredMCPConfig } from '../../shared/mcp-types';
 import { AgentLoop } from '../services/agent/loop';
 import { storageService } from '../services/storage';
 import { skillService } from '../services/skill';
+import { mcpManager } from '../services/mcp';
 import {
   setQuestionWindow,
   resolveQuestion,
@@ -47,6 +49,9 @@ export function setupIPC(mainWindow: BrowserWindow): void {
       storageService.setCurrentWorkspacePath(path);
     }
 
+    // Set workspace for MCP manager to load project-specific config
+    await mcpManager.setWorkspace(path);
+
     return data;
   });
 
@@ -60,6 +65,9 @@ export function setupIPC(mainWindow: BrowserWindow): void {
       storageService.addRecentWorkspace(path, data.workspace.name);
       storageService.setCurrentWorkspacePath(path);
     }
+
+    // Set workspace for MCP manager to load project-specific config
+    await mcpManager.setWorkspace(path);
 
     return data;
   });
@@ -246,5 +254,53 @@ export function setupIPC(mainWindow: BrowserWindow): void {
 
   ipcMain.handle(IPC_CHANNELS.QUESTION_SKIP, (_event, requestId: string) => {
     skipQuestion(requestId);
+  });
+
+  // =====================
+  // MCP (Model Context Protocol)
+  // =====================
+
+  ipcMain.handle(IPC_CHANNELS.MCP_GET_STATUS, async (): Promise<MCPServerStatus[]> => {
+    return mcpManager.getStatuses();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.MCP_CONNECT, async (_event, name: string): Promise<void> => {
+    await mcpManager.connect(name);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.MCP_DISCONNECT, async (_event, name: string): Promise<void> => {
+    await mcpManager.disconnect(name);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.MCP_GET_CONFIG, async (): Promise<MCPConfig> => {
+    return mcpManager.getConfig();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.MCP_SAVE_CONFIG, async (_event, config: MCPConfig): Promise<void> => {
+    await mcpManager.saveConfig(config);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.MCP_GET_LAYERED_CONFIG, async (): Promise<LayeredMCPConfig> => {
+    return mcpManager.getLayeredConfig();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.MCP_SAVE_GLOBAL_CONFIG, async (_event, config: MCPConfig): Promise<void> => {
+    await mcpManager.saveGlobalConfig(config);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.MCP_SAVE_PROJECT_CONFIG, async (_event, config: MCPConfig, workspacePath: string): Promise<void> => {
+    await mcpManager.saveProjectConfig(config, workspacePath);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.MCP_SET_WORKSPACE, async (_event, workspacePath: string | null): Promise<void> => {
+    await mcpManager.setWorkspace(workspacePath);
+  });
+
+  ipcMain.on(IPC_CHANNELS.MCP_STATUS_CHANGED, (_event, statuses: MCPServerStatus[]) => {
+    mainWindow.webContents.send(IPC_CHANNELS.MCP_STATUS_CHANGED, statuses);
+  });
+
+  mcpManager.onStatusChange((statuses) => {
+    mainWindow.webContents.send(IPC_CHANNELS.MCP_STATUS_CHANGED, statuses);
   });
 }

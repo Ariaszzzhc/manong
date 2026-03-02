@@ -6,6 +6,7 @@ import { Sidebar } from './components/Sidebar';
 import { ChatPanel } from './components/ChatPanel';
 import { WelcomePage } from './components/WelcomePage';
 import { SettingsModal } from './components/SettingsModal';
+import { MCPConfigModal } from './components/MCPConfigModal';
 import { CommandPalette } from './components/CommandPalette';
 import { useAppStore } from './stores/app';
 import { themes, applyTheme } from './themes';
@@ -13,8 +14,9 @@ import type { ThemeName } from './themes';
 import type { Skill } from './shared/types';
 
 export const App: React.FC = () => {
-  const { currentWorkspace, setWorkspace, config, setConfig, openCommandPalette, loadSkills } = useAppStore();
+  const { currentWorkspace, currentWorkspacePath, setWorkspace, config, setConfig, openCommandPalette, loadSkills, mcpStatuses, setMCPStatuses } = useAppStore();
   const [showSettings, setShowSettings] = useState(false);
+  const [showMCPConfig, setShowMCPConfig] = useState(false);
 
   useEffect(() => {
     if (config?.theme) {
@@ -34,7 +36,17 @@ export const App: React.FC = () => {
         loadSkills();
       }
     });
-  }, [setConfig, setWorkspace, loadSkills]);
+
+    const unsubscribe = window.manong.mcp.onStatusChanged((statuses) => {
+      setMCPStatuses(statuses);
+    });
+
+    window.manong.mcp.getStatus().then(setMCPStatuses);
+
+    return () => {
+      unsubscribe();
+    };
+  }, [setConfig, setWorkspace, loadSkills, setMCPStatuses]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -84,13 +96,36 @@ export const App: React.FC = () => {
     }
   }, [currentWorkspace]);
 
+  const handleMCPConnect = useCallback(async (name: string) => {
+    try {
+      await window.manong.mcp.connect(name);
+    } catch (error) {
+      console.error('Failed to connect to MCP server:', error);
+    }
+  }, []);
+
+  const handleMCPDisconnect = useCallback(async (name: string) => {
+    try {
+      await window.manong.mcp.disconnect(name);
+    } catch (error) {
+      console.error('Failed to disconnect from MCP server:', error);
+    }
+  }, []);
+
+  const handleMCPRefresh = useCallback(() => {
+    window.manong.mcp.getStatus().then(setMCPStatuses);
+  }, [setMCPStatuses]);
+
   return (
     <div className="h-screen flex flex-col bg-background text-text-primary font-display antialiased">
       <TitleBar />
       <div className="flex flex-1 h-[calc(100vh-2.5rem)] overflow-hidden">
         {currentWorkspace ? (
           <>
-            <NavigationBar onOpenSettings={() => setShowSettings(true)} />
+            <NavigationBar
+              onOpenSettings={() => setShowSettings(true)}
+              onOpenMCPConfig={() => setShowMCPConfig(true)}
+            />
             <Sidebar />
             <ChatPanel />
           </>
@@ -100,6 +135,15 @@ export const App: React.FC = () => {
       </div>
 
       <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+      <MCPConfigModal
+        isOpen={showMCPConfig}
+        onClose={() => setShowMCPConfig(false)}
+        statuses={mcpStatuses}
+        currentWorkspacePath={currentWorkspacePath}
+        onConnect={handleMCPConnect}
+        onDisconnect={handleMCPDisconnect}
+        onRefresh={handleMCPRefresh}
+      />
       <CommandPalette onSelectSkill={handleSelectSkill} />
     </div>
   );

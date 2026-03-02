@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from './shared/ipc';
 import type { Session, StreamEvent, AppConfig, Workspace, WorkspaceData, Skill, SkillExecuteResult, QuestionRequest, QuestionAnswer } from './shared/types';
+import type { MCPConfig, MCPServerStatus, LayeredMCPConfig } from './shared/mcp-types';
 
 const api = {
   agent: {
@@ -127,6 +128,43 @@ const api = {
       ipcRenderer.on(IPC_CHANNELS.QUESTION_ASK, handler);
       return () => {
         ipcRenderer.removeListener(IPC_CHANNELS.QUESTION_ASK, handler);
+      };
+    },
+  },
+
+  mcp: {
+    getStatus: (): Promise<MCPServerStatus[]> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.MCP_GET_STATUS);
+    },
+    connect: (name: string): Promise<void> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.MCP_CONNECT, name);
+    },
+    disconnect: (name: string): Promise<void> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.MCP_DISCONNECT, name);
+    },
+    getConfig: (): Promise<MCPConfig> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.MCP_GET_CONFIG);
+    },
+    saveConfig: (config: MCPConfig): Promise<void> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.MCP_SAVE_CONFIG, config);
+    },
+    getLayeredConfig: (): Promise<LayeredMCPConfig> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.MCP_GET_LAYERED_CONFIG);
+    },
+    saveGlobalConfig: (config: MCPConfig): Promise<void> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.MCP_SAVE_GLOBAL_CONFIG, config);
+    },
+    saveProjectConfig: (config: MCPConfig, workspacePath: string): Promise<void> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.MCP_SAVE_PROJECT_CONFIG, config, workspacePath);
+    },
+    setWorkspace: (workspacePath: string | null): Promise<void> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.MCP_SET_WORKSPACE, workspacePath);
+    },
+    onStatusChanged: (callback: (statuses: MCPServerStatus[]) => void) => {
+      const handler = (_event: unknown, statuses: MCPServerStatus[]) => callback(statuses);
+      ipcRenderer.on(IPC_CHANNELS.MCP_STATUS_CHANGED, handler);
+      return () => {
+        ipcRenderer.removeListener(IPC_CHANNELS.MCP_STATUS_CHANGED, handler);
       };
     },
   },

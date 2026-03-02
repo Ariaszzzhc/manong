@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { Session, Message, Part, AppConfig, StreamEvent, Workspace, WorkspaceData, Skill, QuestionRequest } from '../../shared/types';
+import type { MCPServerStatus, MCPConfig, LayeredMCPConfig } from '../../shared/mcp-types';
 
 interface AppState {
   // Workspace
@@ -18,6 +19,11 @@ interface AppState {
 
   // Question state
   pendingQuestion: QuestionRequest | null;
+
+  // MCP state
+  mcpStatuses: MCPServerStatus[];
+  mcpConfig: MCPConfig | null;
+  mcpLayeredConfig: LayeredMCPConfig | null;
 
   // Config
   config: AppConfig | null;
@@ -56,6 +62,13 @@ interface AppState {
 
   // Question Actions
   setPendingQuestion: (question: QuestionRequest | null) => void;
+
+  // MCP Actions
+  setMCPStatuses: (statuses: MCPServerStatus[]) => void;
+  setMCPConfig: (config: MCPConfig) => void;
+  setMCPLayeredConfig: (config: LayeredMCPConfig) => void;
+  loadMCPStatus: () => Promise<void>;
+  loadMCPLayeredConfig: () => Promise<void>;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -68,6 +81,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   pendingMessageId: null,
   pendingParts: [],
   pendingQuestion: null,
+  mcpStatuses: [],
+  mcpConfig: null,
+  mcpLayeredConfig: null,
   config: null,
   skills: [],
   commandPaletteOpen: false,
@@ -351,4 +367,32 @@ export const useAppStore = create<AppState>((set, get) => ({
   // =====================
 
   setPendingQuestion: (question) => set({ pendingQuestion: question }),
+
+  // =====================
+  // MCP Actions
+  // =====================
+
+  setMCPStatuses: (statuses) => set({ mcpStatuses: statuses }),
+
+  setMCPConfig: (config) => set({ mcpConfig: config }),
+
+  setMCPLayeredConfig: (config) => set({ mcpLayeredConfig: config }),
+
+  loadMCPStatus: async () => {
+    try {
+      const statuses = await window.manong.mcp.getStatus();
+      set({ mcpStatuses: statuses });
+    } catch (error) {
+      console.error('Failed to load MCP status:', error);
+    }
+  },
+
+  loadMCPLayeredConfig: async () => {
+    try {
+      const config = await window.manong.mcp.getLayeredConfig();
+      set({ mcpLayeredConfig: config, mcpConfig: config.merged });
+    } catch (error) {
+      console.error('Failed to load MCP layered config:', error);
+    }
+  },
 }));

@@ -1,0 +1,607 @@
+import React, { useState, useEffect } from 'react';
+import { X, Plus, Trash2, Save, RefreshCw, Globe, Folder, ToggleLeft, ToggleRight } from 'lucide-react';
+import type { MCPConfig, MCPServerConfig, MCPServerStatus, LayeredMCPConfig } from '../../shared/mcp-types';
+
+interface MCPConfigModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  statuses: MCPServerStatus[];
+  currentWorkspacePath: string | null;
+  onConnect: (name: string) => void;
+  onDisconnect: (name: string) => void;
+  onRefresh: () => void;
+}
+
+interface ServerFormData {
+  name: string;
+  command: string;
+  args: string;
+  env: string;
+  transport: 'stdio' | 'http';
+  url: string;
+  headers: string;
+  enabled: boolean;
+}
+
+const emptyFormData: ServerFormData = {
+  name: '',
+  command: 'npx',
+  args: '',
+  env: '{}',
+  transport: 'stdio',
+  url: '',
+  headers: '{}',
+  enabled: true,
+};
+
+type TabType = 'merged' | 'global' | 'project';
+
+export const MCPConfigModal: React.FC<MCPConfigModalProps> = ({
+  isOpen,
+  onClose,
+  statuses,
+  currentWorkspacePath,
+  onConnect,
+  onDisconnect,
+  onRefresh,
+}) => {
+  const [layeredConfig, setLayeredConfig] = useState<LayeredMCPConfig>({
+    global: { mcpServers: {} },
+    project: null,
+    merged: { mcpServers: {} },
+  });
+  const [activeTab, setActiveTab] = useState<TabType>('merged');
+  const [editingServer, setEditingServer] = useState<string | null>(null);
+  const [editingScope, setEditingScope] = useState<'global' | 'project'>('global');
+  const [formData, setFormData] = useState<ServerFormData>(emptyFormData);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      window.manong.mcp.getLayeredConfig().then(setLayeredConfig);
+    }
+  }, [isOpen]);
+
+  const getActiveConfig = (): MCPConfig => {
+    switch (activeTab) {
+      case 'global':
+        return layeredConfig.global;
+      case 'project':
+        return layeredConfig.project || { mcpServers: {} };
+      default:
+        return layeredConfig.merged;
+    }
+  };
+
+  const resetForm = () => {
+    setFormData(emptyFormData);
+    setEditingServer(null);
+    setEditingScope('global');
+    setShowAddForm(false);
+  };
+
+  const handleEditServer = (name: string, scope: 'global' | 'project') => {
+    const config = scope === 'global' ? layeredConfig.global : layeredConfig.project;
+    const serverConfig = config?.mcpServers[name];
+    if (!serverConfig) return;
+
+    setEditingServer(name);
+    setEditingScope(scope);
+    setShowAddForm(true);
+    setFormData({
+      name,
+      command: serverConfig.command || 'npx',
+      args: (serverConfig.args || []).join(' '),
+      env: JSON.stringify(serverConfig.env || {}, null, 2),
+      transport: serverConfig.transport || 'stdio',
+      url: serverConfig.url || '',
+      headers: JSON.stringify(serverConfig.headers || {}, null, 2),
+      enabled: serverConfig.enabled !== false,
+    });
+  };
+
+  const handleDeleteServer = async (name: string, scope: 'global' | 'project') => {
+    const config = scope === 'global' ? { ...layeredConfig.global } : { ...layeredConfig.project! };
+    delete config.mcpServers[name];
+
+    setSaving(true);
+    try {
+      if (scope === 'global') {
+        await window.manong.mcp.saveGlobalConfig(config);
+      } else if (currentWorkspacePath) {
+        await window.manong.mcp.saveProjectConfig(config, currentWorkspacePath);
+      }
+      const newLayeredConfig = await window.manong.mcp.getLayeredConfig();
+      setLayeredConfig(newLayeredConfig);
+      onRefresh();
+    } catch (error) {
+      console.error('Failed to delete server:', error);
+    }
+    setSaving(false);
+  };
+
+  const handleToggleServer = async (name: string, scope: 'global' | 'project') => {
+    // Only applicable in project scope to disable global servers
+    if (scope !== 'project' || !currentWorkspacePath) return;
+
+    const projectConfig = layeredConfig.project || { mcpServers: {} };
+    const globalConfig = layeredConfig.global.mcpServers[name];
+
+    if (!globalConfig) return;
+
+    const isCurrentlyDisabled = projectConfig.mcpServers[name]?.enabled === false;
+    const newProjectConfig: MCPConfig = {
+      mcpServers: {
+        ...projectConfig.mcpServers,
+        [name]: {
+          enabled: isCurrentlyDisabled ? true : false,
+        },
+      },
+    };
+
+    setSaving(true);
+    try {
+      await window.manong.mcp.saveProjectConfig(newProjectConfig, currentWorkspacePath);
+      const newLayeredConfig = await window.manong.mcp.getLayeredConfig();
+      setLayeredConfig(newLayeredConfig);
+      onRefresh();
+    } catch (error) {
+      console.error('Failed to toggle server:', error);
+    }
+    setSaving(false);
+  };
+
+  const handleSaveServer = async () => {
+    const serverConfig: MCPServerConfig = {
+      command: formData.command || undefined,
+      args: formData.args ? formData.args.split(' ').filter(Boolean) : undefined,
+      env: formData.env ? JSON.parse(formData.env) : undefined,
+      transport: formData.transport,
+      url: formData.url || undefined,
+      headers: formData.headers ? JSON.parse(formData.headers) : undefined,
+      enabled: editingScope === 'project' && !formData.enabled ? false : undefined,
+    };
+
+    if (formData.transport === 'http' && !formData.url) {
+      alert('URL is required for HTTP transport');
+      return;
+    }
+
+    if (formData.transport === 'stdio' && !formData.command) {
+      alert('Command is required for Stdio transport');
+      return;
+    }
+
+    const serverName = editingServer || formData.name;
+    if (!serverName.trim()) {
+      alert('Server name is required');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      if (editingScope === 'global') {
+        const newConfig: MCPConfig = {
+          ...layeredConfig.global,
+          mcpServers: {
+            ...layeredConfig.global.mcpServers,
+            [serverName]: serverConfig,
+          },
+        };
+        if (editingServer && editingServer !== formData.name) {
+          delete newConfig.mcpServers[editingServer];
+        }
+        await window.manong.mcp.saveGlobalConfig(newConfig);
+      } else if (currentWorkspacePath) {
+        const projectConfig = layeredConfig.project || { mcpServers: {} };
+        const newConfig: MCPConfig = {
+          ...projectConfig,
+          mcpServers: {
+            ...projectConfig.mcpServers,
+            [serverName]: serverConfig,
+          },
+        };
+        if (editingServer && editingServer !== formData.name) {
+          delete newConfig.mcpServers[editingServer];
+        }
+        await window.manong.mcp.saveProjectConfig(newConfig, currentWorkspacePath);
+      }
+
+      const newLayeredConfig = await window.manong.mcp.getLayeredConfig();
+      setLayeredConfig(newLayeredConfig);
+      resetForm();
+      onRefresh();
+    } catch (error) {
+      console.error('Failed to save server:', error);
+      alert('Failed to save configuration');
+    }
+    setSaving(false);
+  };
+
+  const getStatusBadge = (name: string) => {
+    const status = statuses.find((s) => s.name === name);
+    if (!status) return null;
+
+    const colorClass =
+      status.status === 'connected'
+        ? 'bg-green-500/20 text-green-400'
+        : status.status === 'connecting'
+        ? 'bg-yellow-500/20 text-yellow-400'
+        : status.status === 'error'
+        ? 'bg-red-500/20 text-red-400'
+        : 'bg-surface-elevated text-text-secondary';
+
+    return (
+      <span className={`text-[10px] px-2 py-0.5 rounded-full ${colorClass}`}>
+        {status.status}
+      </span>
+    );
+  };
+
+  const isServerDisabled = (name: string): boolean => {
+    return layeredConfig.project?.mcpServers[name]?.enabled === false;
+  };
+
+  if (!isOpen) return null;
+
+  const activeConfig = getActiveConfig();
+  const hasProject = !!currentWorkspacePath;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-surface rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col border border-border">
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <h2 className="text-lg font-semibold text-text-primary">
+            MCP Server Configuration
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-text-secondary hover:text-text-primary transition-colors"
+          >
+            <X size={20} strokeWidth={1.5} />
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border-b border-border">
+          <button
+            onClick={() => { setActiveTab('merged'); resetForm(); }}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === 'merged'
+                ? 'text-primary border-b-2 border-primary'
+                : 'text-text-secondary hover:text-text-primary'
+            }`}
+          >
+            All Servers
+          </button>
+          <button
+            onClick={() => { setActiveTab('global'); resetForm(); }}
+            className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-1 ${
+              activeTab === 'global'
+                ? 'text-primary border-b-2 border-primary'
+                : 'text-text-secondary hover:text-text-primary'
+            }`}
+          >
+            <Globe size={14} />
+            Global
+          </button>
+          <button
+            onClick={() => { setActiveTab('project'); resetForm(); }}
+            disabled={!hasProject}
+            className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-1 ${
+              activeTab === 'project'
+                ? 'text-primary border-b-2 border-primary'
+                : 'text-text-secondary hover:text-text-primary'
+            } ${!hasProject ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <Folder size={14} />
+            Project
+            {!hasProject && <span className="text-[10px]">(no workspace)</span>}
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-text-secondary">
+                {Object.keys(activeConfig.mcpServers).length} server(s) configured
+                {activeTab === 'project' && !layeredConfig.project && ' (no project config)'}
+              </span>
+              {!showAddForm && activeTab !== 'merged' && (
+                <button
+                  onClick={() => {
+                    resetForm();
+                    setEditingScope(activeTab === 'global' ? 'global' : 'project');
+                    setShowAddForm(true);
+                  }}
+                  disabled={activeTab === 'project' && !hasProject}
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs bg-primary hover:bg-primary-hover text-white rounded transition-colors disabled:opacity-50"
+                >
+                  <Plus size={14} strokeWidth={1.5} />
+                  Add Server
+                </button>
+              )}
+            </div>
+
+            {showAddForm && (
+              <div className="bg-surface-elevated rounded-lg p-4 border border-border">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-medium text-text-primary flex items-center gap-2">
+                    {editingServer ? 'Edit Server' : 'Add New Server'}
+                    {editingScope === 'global' ? (
+                      <Globe size={12} className="text-text-secondary" />
+                    ) : (
+                      <Folder size={12} className="text-primary" />
+                    )}
+                  </h3>
+                  <button
+                    onClick={resetForm}
+                    className="text-text-secondary hover:text-text-primary"
+                  >
+                    <X size={16} strokeWidth={1.5} />
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-text-secondary mb-1">
+                        Server Name
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) =>
+                          setFormData({ ...formData, name: e.target.value })
+                        }
+                        placeholder="my-server"
+                        disabled={!!editingServer}
+                        className="w-full bg-surface text-text-primary rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary border border-border disabled:opacity-50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-text-secondary mb-1">
+                        Transport
+                      </label>
+                      <select
+                        value={formData.transport}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            transport: e.target.value as 'stdio' | 'http',
+                          })
+                        }
+                        className="w-full bg-surface text-text-primary rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary border border-border"
+                      >
+                        <option value="stdio">Stdio</option>
+                        <option value="http">HTTP/SSE</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {formData.transport === 'stdio' ? (
+                    <>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-text-secondary mb-1">
+                            Command
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.command}
+                            onChange={(e) =>
+                              setFormData({ ...formData, command: e.target.value })
+                            }
+                            placeholder="npx"
+                            className="w-full bg-surface text-text-primary rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary border border-border"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-text-secondary mb-1">
+                            Arguments
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.args}
+                            onChange={(e) =>
+                              setFormData({ ...formData, args: e.target.value })
+                            }
+                            placeholder="-y @anthropic/mcp-server-filesystem"
+                            className="w-full bg-surface text-text-primary rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary border border-border"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-text-secondary mb-1">
+                          Environment Variables (JSON)
+                        </label>
+                        <textarea
+                          value={formData.env}
+                          onChange={(e) =>
+                            setFormData({ ...formData, env: e.target.value })
+                          }
+                          placeholder='{"API_KEY": "xxx"}'
+                          rows={2}
+                          className="w-full bg-surface text-text-primary rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary border border-border font-mono"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div>
+                        <label className="block text-xs text-text-secondary mb-1">
+                          URL
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.url}
+                          onChange={(e) =>
+                            setFormData({ ...formData, url: e.target.value })
+                          }
+                          placeholder="http://localhost:3000/mcp"
+                          className="w-full bg-surface text-text-primary rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary border border-border"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-text-secondary mb-1">
+                          Headers (JSON)
+                        </label>
+                        <textarea
+                          value={formData.headers}
+                          onChange={(e) =>
+                            setFormData({ ...formData, headers: e.target.value })
+                          }
+                          placeholder='{"Authorization": "Bearer token"}'
+                          rows={2}
+                          className="w-full bg-surface text-text-primary rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary border border-border font-mono"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {editingScope === 'project' && editingServer && layeredConfig.global.mcpServers[editingServer] && (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="enabled"
+                        checked={formData.enabled}
+                        onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
+                        className="rounded border-border"
+                      />
+                      <label htmlFor="enabled" className="text-xs text-text-secondary">
+                        Enable this server (uncheck to disable inherited global server)
+                      </label>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      onClick={resetForm}
+                      className="px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveServer}
+                      disabled={saving}
+                      className="px-3 py-1.5 text-sm bg-primary hover:bg-primary-hover text-white rounded transition-colors flex items-center gap-1 disabled:opacity-50"
+                    >
+                      <Save size={14} strokeWidth={1.5} />
+                      {saving ? 'Saving...' : 'Save'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              {Object.entries(activeConfig.mcpServers).map(([name, serverConfig]) => {
+                const status = statuses.find((s) => s.name === name);
+                const source = layeredConfig.project?.mcpServers[name] ? 'project' : 'global';
+                const isDisabled = isServerDisabled(name);
+                const isInheritedGlobal = activeTab === 'project' && layeredConfig.global.mcpServers[name];
+
+                return (
+                  <div
+                    key={name}
+                    className={`flex items-center gap-3 p-3 bg-surface-elevated rounded-lg border border-border ${
+                      isDisabled ? 'opacity-50' : ''
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-text-primary">
+                          {name}
+                        </span>
+                        {getStatusBadge(name)}
+                        {source === 'project' ? (
+                          <Folder size={12} className="text-primary" title="Project config" />
+                        ) : (
+                          <Globe size={12} className="text-text-secondary" title="Global config" />
+                        )}
+                        {isDisabled && (
+                          <span className="text-[10px] text-red-400">disabled</span>
+                        )}
+                      </div>
+                      <div className="text-xs text-text-secondary truncate mt-0.5">
+                        {serverConfig.transport === 'http'
+                          ? serverConfig.url
+                          : `${serverConfig.command || 'npx'} ${(serverConfig.args || []).join(' ')}`}
+                      </div>
+                      {status?.status === 'connected' && !isDisabled && (
+                        <div className="text-xs text-green-400 mt-0.5">
+                          {status.toolCount} tools available
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {!isDisabled && status?.status === 'connected' ? (
+                        <button
+                          onClick={() => onDisconnect(name)}
+                          className="px-2 py-1 text-xs text-yellow-400 hover:bg-yellow-500/20 rounded transition-colors"
+                        >
+                          Disconnect
+                        </button>
+                      ) : !isDisabled && status?.status === 'disconnected' ? (
+                        <button
+                          onClick={() => onConnect(name)}
+                          className="px-2 py-1 text-xs text-green-400 hover:bg-green-500/20 rounded transition-colors flex items-center gap-1"
+                        >
+                          <RefreshCw size={12} strokeWidth={1.5} />
+                          Connect
+                        </button>
+                      ) : isDisabled ? null : (
+                        <span className="text-xs text-text-secondary">
+                          {status?.status}
+                        </span>
+                      )}
+                      {activeTab !== 'merged' && (
+                        <>
+                          <button
+                            onClick={() => handleEditServer(name, activeTab === 'global' ? 'global' : 'project')}
+                            className="p-1 text-text-secondary hover:text-text-primary hover:bg-hover rounded transition-colors"
+                          >
+                            <span className="text-xs">Edit</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteServer(name, activeTab === 'global' ? 'global' : 'project')}
+                            className="p-1 text-text-secondary hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
+                          >
+                            <Trash2 size={14} strokeWidth={1.5} />
+                          </button>
+                        </>
+                      )}
+                      {activeTab === 'project' && isInheritedGlobal && (
+                        <button
+                          onClick={() => handleToggleServer(name, 'project')}
+                          className="p-1 text-text-secondary hover:text-primary transition-colors"
+                          title={isDisabled ? 'Enable server' : 'Disable server'}
+                        >
+                          {isDisabled ? (
+                            <ToggleLeft size={16} strokeWidth={1.5} />
+                          ) : (
+                            <ToggleRight size={16} className="text-green-400" strokeWidth={1.5} />
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 p-4 border-t border-border">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

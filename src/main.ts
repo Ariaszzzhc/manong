@@ -2,6 +2,7 @@ import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { setupIPC } from './main/ipc';
+import { mcpManager } from './main/services/mcp';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -10,7 +11,7 @@ if (started) {
 
 let mainWindow: BrowserWindow | null = null;
 
-const createWindow = () => {
+const createWindow = async () => {
   // Create the browser window with frameless design
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -43,6 +44,14 @@ const createWindow = () => {
 
   // Setup IPC handlers
   setupIPC(mainWindow);
+
+  // Initialize MCP and connect to servers
+  try {
+    await mcpManager.initialize();
+    await mcpManager.connectAll();
+  } catch (error) {
+    console.error('Failed to initialize MCP:', error);
+  }
 };
 
 // This method will be called when Electron has finished

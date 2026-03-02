@@ -53,6 +53,7 @@
     "@anthropic-ai/sdk": "^0.78.0",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/jetbrains-mono": "^5.2.8",
+    "@modelcontextprotocol/sdk": "^1.27.1",
     "ai": "^6.0.104",
     "electron-log": "^5.4.3",
     "electron-squirrel-startup": "^1.0.1",

@@ -1,11 +1,12 @@
 import React from 'react';
-import { MessageSquare, FolderOpen, Link2, Bug, Settings } from 'lucide-react';
+import { MessageSquare, FolderOpen, Link2, Bug, Settings, Server } from 'lucide-react';
 
 interface NavigationBarProps {
   onOpenSettings?: () => void;
+  onOpenMCPConfig?: () => void;
 }
 
-export const NavigationBar: React.FC<NavigationBarProps> = ({ onOpenSettings }) => {
+export const NavigationBar: React.FC<NavigationBarProps> = ({ onOpenSettings, onOpenMCPConfig }) => {
   const navItems = [
     { icon: MessageSquare, label: 'Chat', active: true },
     { icon: FolderOpen, label: 'Files' },
@@ -37,6 +38,15 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({ onOpenSettings }) 
 
       {/* Spacer */}
       <div className="flex-1" />
+
+      {/* MCP Servers */}
+      <button
+        onClick={onOpenMCPConfig}
+        className="w-8 h-8 mb-3 flex items-center justify-center text-text-secondary hover:text-text-primary relative group rounded-md hover:bg-hover transition-colors"
+        title="MCP Servers"
+      >
+        <Server size={20} strokeWidth={1.5} />
+      </button>
 
       {/* Settings at bottom */}
       <button
