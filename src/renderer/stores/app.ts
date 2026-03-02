@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Session, Message, Part, AppConfig, StreamEvent, Workspace, WorkspaceData, Skill } from '../../shared/types';
+import type { Session, Message, Part, AppConfig, StreamEvent, Workspace, WorkspaceData, Skill, QuestionRequest } from '../../shared/types';
 
 interface AppState {
   // Workspace
@@ -15,6 +15,9 @@ interface AppState {
   isStreaming: boolean;
   pendingMessageId: string | null;
   pendingParts: Part[];
+
+  // Question state
+  pendingQuestion: QuestionRequest | null;
 
   // Config
   config: AppConfig | null;
@@ -50,6 +53,9 @@ interface AppState {
   loadSkills: () => Promise<void>;
   openCommandPalette: () => void;
   closeCommandPalette: () => void;
+
+  // Question Actions
+  setPendingQuestion: (question: QuestionRequest | null) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -61,6 +67,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   isStreaming: false,
   pendingMessageId: null,
   pendingParts: [],
+  pendingQuestion: null,
   config: null,
   skills: [],
   commandPaletteOpen: false,
@@ -338,4 +345,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   openCommandPalette: () => set({ commandPaletteOpen: true }),
 
   closeCommandPalette: () => set({ commandPaletteOpen: false }),
+
+  // =====================
+  // Question Actions
+  // =====================
+
+  setPendingQuestion: (question) => set({ pendingQuestion: question }),
 }));

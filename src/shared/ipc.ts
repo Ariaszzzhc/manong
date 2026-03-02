@@ -39,4 +39,9 @@ export const IPC_CHANNELS = {
   SKILL_LIST: 'skill:list',
   SKILL_GET: 'skill:get',
   SKILL_EXECUTE: 'skill:execute',
+
+  // Questions (ask tool)
+  QUESTION_ASK: 'question:ask',
+  QUESTION_ANSWER: 'question:answer',
+  QUESTION_SKIP: 'question:skip',
 } as const;

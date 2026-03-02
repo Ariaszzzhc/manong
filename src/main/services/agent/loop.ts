@@ -8,6 +8,7 @@ import type {
 import { DEFAULT_TOKEN_USAGE } from '../../../shared/types';
 import { AnthropicProvider } from '../provider/anthropic';
 import { toolRegistry } from '../tools';
+import { cancelPendingQuestions } from '../tools/ask';
 import type { BrowserWindow } from 'electron';
 import { createLogger } from '../logger';
 
@@ -439,5 +440,7 @@ export class AgentLoop {
       this.abortController.abort();
       this.abortController = null;
     }
+    // Cancel all pending questions
+    cancelPendingQuestions();
   }
 }

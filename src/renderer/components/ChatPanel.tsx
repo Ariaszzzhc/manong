@@ -2,7 +2,8 @@ import React, { useRef, useEffect, useState } from 'react';
 import { PlusCircle, Image, Terminal, ArrowUp } from 'lucide-react';
 import { useAppStore } from '../stores/app';
 import { MessageItem } from './MessageItem';
-import type { Message } from '../../shared/types';
+import { QuestionCard } from './QuestionCard';
+import type { Message, QuestionAnswer } from '../../shared/types';
 import { v4 as uuidv4 } from 'uuid';
 
 const SLASH_COMMAND_PATTERN = /^\/(\w+)(?:\s+(.*))?$/;
@@ -14,12 +15,14 @@ export const ChatPanel: React.FC = () => {
     isStreaming,
     pendingMessageId,
     pendingParts,
+    pendingQuestion,
     config,
     skills,
     updateSession,
     startStreaming,
     handleStreamEvent,
     loadSkills,
+    setPendingQuestion,
   } = useAppStore();
 
   const [input, setInput] = useState('');
@@ -57,6 +60,49 @@ export const ChatPanel: React.FC = () => {
   useEffect(() => {
     loadSkills();
   }, [loadSkills, currentWorkspace]);
+
+  useEffect(() => {
+    const unsubscribe = window.manong.question.onAsk((request) => {
+      setPendingQuestion(request);
+    });
+    return unsubscribe;
+  }, [setPendingQuestion]);
+
+  const handleQuestionSubmit = async (answers: QuestionAnswer[]) => {
+    if (!pendingQuestion) return;
+
+    await window.manong.question.answer(pendingQuestion.id, answers);
+
+    // Add user's answer as a message
+    if (currentSession) {
+      const answerText = pendingQuestion.questions.map((q, idx) => {
+        return `**${q.header}**: ${answers[idx].join(', ')}`;
+      }).join('\n');
+
+      const userMessage: Message = {
+        id: uuidv4(),
+        role: 'user',
+        parts: [{ type: 'text', text: answerText }],
+        createdAt: Date.now(),
+      };
+
+      const updatedSession = {
+        ...currentSession,
+        messages: [...currentSession.messages, userMessage],
+        updatedAt: Date.now(),
+      };
+      updateSession(updatedSession);
+    }
+
+    setPendingQuestion(null);
+  };
+
+  const handleQuestionSkip = async () => {
+    if (!pendingQuestion) return;
+
+    await window.manong.question.skip(pendingQuestion.id);
+    setPendingQuestion(null);
+  };
 
   const handleSend = async () => {
     if (!input.trim() || isStreaming || !currentSession || !currentWorkspace) return;
@@ -189,60 +235,70 @@ export const ChatPanel: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
+      {/* Input area - replaced by QuestionCard when there's a pending question */}
       <div className="border-t border-border p-4">
         <div className="max-w-3xl mx-auto">
-          <div className="relative">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type a command or ask a question..."
-              className="w-full bg-surface text-text-primary rounded-lg px-4 py-3 pr-12 resize-none focus:outline-none focus:ring-1 focus:ring-primary border border-border disabled:opacity-50"
-              rows={1}
-              disabled={isStreaming}
+          {pendingQuestion ? (
+            <QuestionCard
+              questions={pendingQuestion.questions}
+              onSubmit={handleQuestionSubmit}
+              onSkip={handleQuestionSkip}
             />
-            <button
-              onClick={handleSend}
-              disabled={!input.trim() || isStreaming}
-              className="absolute right-2 bottom-2 p-2 text-text-secondary hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title="Send message"
-            >
-              <ArrowUp size={20} strokeWidth={1.5} />
-            </button>
-          </div>
+          ) : (
+            <>
+              <div className="relative">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Type a command or ask a question..."
+                  className="w-full bg-surface text-text-primary rounded-lg px-4 py-3 pr-12 resize-none focus:outline-none focus:ring-1 focus:ring-primary border border-border disabled:opacity-50"
+                  rows={1}
+                  disabled={isStreaming}
+                />
+                <button
+                  onClick={handleSend}
+                  disabled={!input.trim() || isStreaming}
+                  className="absolute right-2 bottom-2 p-2 text-text-secondary hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  title="Send message"
+                >
+                  <ArrowUp size={20} strokeWidth={1.5} />
+                </button>
+              </div>
 
-          {/* Bottom toolbar */}
-          <div className="flex items-center justify-between pt-2 mt-1">
-            {/* Left buttons */}
-            <div className="flex items-center gap-4">
-              <button
-                className="text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1.5 text-xs font-mono group"
-                title="Add Context"
-              >
-                <PlusCircle size={16} className="group-hover:scale-110 transition-transform" strokeWidth={1.5} />
-                <span>Context</span>
-              </button>
-              <button
-                className="text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1.5 text-xs font-mono group"
-                title="Upload Image"
-              >
-                <Image size={16} className="group-hover:scale-110 transition-transform" strokeWidth={1.5} />
-              </button>
-              <button
-                className="text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1.5 text-xs font-mono group"
-                title="Terminal Command"
-              >
-                <Terminal size={16} className="group-hover:scale-110 transition-transform" strokeWidth={1.5} />
-              </button>
-            </div>
+              {/* Bottom toolbar */}
+              <div className="flex items-center justify-between pt-2 mt-1">
+                {/* Left buttons */}
+                <div className="flex items-center gap-4">
+                  <button
+                    className="text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1.5 text-xs font-mono group"
+                    title="Add Context"
+                  >
+                    <PlusCircle size={16} className="group-hover:scale-110 transition-transform" strokeWidth={1.5} />
+                    <span>Context</span>
+                  </button>
+                  <button
+                    className="text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1.5 text-xs font-mono group"
+                    title="Upload Image"
+                  >
+                    <Image size={16} className="group-hover:scale-110 transition-transform" strokeWidth={1.5} />
+                  </button>
+                  <button
+                    className="text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1.5 text-xs font-mono group"
+                    title="Terminal Command"
+                  >
+                    <Terminal size={16} className="group-hover:scale-110 transition-transform" strokeWidth={1.5} />
+                  </button>
+                </div>
 
-            {/* Right: hint */}
-            <span className="text-[10px] text-text-secondary font-mono">
-              CTRL + ENTER
-            </span>
-          </div>
+                {/* Right: hint */}
+                <span className="text-[10px] text-text-secondary font-mono">
+                  CTRL + ENTER
+                </span>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </main>

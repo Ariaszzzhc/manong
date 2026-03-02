@@ -4,10 +4,16 @@ import type {
   Session,
   StreamEvent,
   AppConfig,
+  QuestionAnswer,
 } from '../../shared/types';
 import { AgentLoop } from '../services/agent/loop';
 import { storageService } from '../services/storage';
 import { skillService } from '../services/skill';
+import {
+  setQuestionWindow,
+  resolveQuestion,
+  skipQuestion,
+} from '../services/tools/ask';
 import '../services/tools'; // Register tools
 
 const agentLoops = new Map<string, AgentLoop>();
@@ -15,6 +21,9 @@ const agentLoops = new Map<string, AgentLoop>();
 export function setupIPC(mainWindow: BrowserWindow): void {
   const agentLoop = new AgentLoop(mainWindow);
   agentLoops.set('default', agentLoop);
+
+  // Set the window reference for question tool
+  setQuestionWindow(mainWindow);
 
   // =====================
   // Workspace Management
@@ -222,5 +231,20 @@ export function setupIPC(mainWindow: BrowserWindow): void {
   ipcMain.handle(IPC_CHANNELS.SKILL_EXECUTE, async (_event, name: string, args: string) => {
     const workspacePath = storageService.getCurrentWorkspacePath();
     return skillService.executeSkill(name, args, workspacePath || undefined);
+  });
+
+  // =====================
+  // Questions
+  // =====================
+
+  ipcMain.handle(
+    IPC_CHANNELS.QUESTION_ANSWER,
+    (_event, requestId: string, answers: QuestionAnswer[]) => {
+      resolveQuestion(requestId, answers);
+    }
+  );
+
+  ipcMain.handle(IPC_CHANNELS.QUESTION_SKIP, (_event, requestId: string) => {
+    skipQuestion(requestId);
   });
 }

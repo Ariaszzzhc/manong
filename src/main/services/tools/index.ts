@@ -7,5 +7,6 @@ import './list-dir';
 import './search';
 import './shell';
 import './skill';
+import './ask';
 
 export { toolRegistry } from './registry';

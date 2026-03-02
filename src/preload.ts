@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from './shared/ipc';
-import type { Session, StreamEvent, AppConfig, Workspace, WorkspaceData, Skill, SkillExecuteResult } from './shared/types';
+import type { Session, StreamEvent, AppConfig, Workspace, WorkspaceData, Skill, SkillExecuteResult, QuestionRequest, QuestionAnswer } from './shared/types';
 
 const api = {
   agent: {
@@ -112,6 +112,22 @@ const api = {
     },
     execute: (name: string, args: string): Promise<SkillExecuteResult> => {
       return ipcRenderer.invoke(IPC_CHANNELS.SKILL_EXECUTE, name, args);
+    },
+  },
+
+  question: {
+    answer: (requestId: string, answers: QuestionAnswer[]): Promise<void> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.QUESTION_ANSWER, requestId, answers);
+    },
+    skip: (requestId: string): Promise<void> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.QUESTION_SKIP, requestId);
+    },
+    onAsk: (callback: (request: QuestionRequest) => void) => {
+      const handler = (_event: unknown, request: QuestionRequest) => callback(request);
+      ipcRenderer.on(IPC_CHANNELS.QUESTION_ASK, handler);
+      return () => {
+        ipcRenderer.removeListener(IPC_CHANNELS.QUESTION_ASK, handler);
+      };
     },
   },
 };

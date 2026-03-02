@@ -150,3 +150,24 @@ export interface SkillExecuteResult {
   prompt?: string
   error?: string
 }
+
+// Question types for ask tool
+export interface QuestionOption {
+  label: string;
+  description: string;
+}
+
+export interface QuestionInfo {
+  question: string;
+  header: string;
+  options: QuestionOption[];
+  multiple?: boolean;
+}
+
+export interface QuestionRequest {
+  id: string;
+  sessionId: string;
+  questions: QuestionInfo[];
+}
+
+export type QuestionAnswer = string[];
