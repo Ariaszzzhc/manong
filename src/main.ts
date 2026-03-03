@@ -13,14 +13,16 @@ let mainWindow: BrowserWindow | null = null;
 
 const createWindow = async () => {
   // Create the browser window with frameless design
+  const isMac = process.platform === 'darwin';
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     minWidth: 800,
     minHeight: 600,
-    frame: false,
-    titleBarStyle: 'hidden',
-    trafficLightPosition: { x: 16, y: 16 },
+    frame: isMac ? undefined : false,
+    ...(isMac
+      ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 16, y: 16 } }
+      : {}),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,

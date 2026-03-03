@@ -8,13 +8,14 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+const useSettingsForm = () => {
   const { config, setConfig } = useAppStore();
   const [apiKey, setApiKey] = useState('');
   const [modelName, setModelName] = useState('claude-sonnet-4-20250514');
   const [baseURL, setBaseURL] = useState('https://api.anthropic.com');
   const [enableThinking, setEnableThinking] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (config) {
@@ -46,6 +47,115 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     };
     await window.manong.config.set(newConfig);
     setConfig(newConfig);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  return { apiKey, setApiKey, modelName, setModelName, baseURL, setBaseURL, enableThinking, setEnableThinking, theme, setTheme, handleSaveConfig, saved };
+};
+
+const SettingsFormContent: React.FC<{ onSave: () => void; saved: boolean; apiKey: string; setApiKey: (v: string) => void; modelName: string; setModelName: (v: string) => void; baseURL: string; setBaseURL: (v: string) => void; enableThinking: boolean; setEnableThinking: (v: boolean) => void; theme: 'light' | 'dark'; setTheme: (v: 'light' | 'dark') => void }> = ({
+  onSave, saved, apiKey, setApiKey, modelName, setModelName, baseURL, setBaseURL, enableThinking, setEnableThinking, theme, setTheme,
+}) => (
+  <>
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm text-text-secondary mb-1">
+          API Key
+        </label>
+        <input
+          type="password"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          placeholder="sk-ant-..."
+          className="w-full bg-surface-elevated text-text-primary rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary border border-border"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm text-text-secondary mb-1">
+          Base URL
+        </label>
+        <input
+          type="text"
+          value={baseURL}
+          onChange={(e) => setBaseURL(e.target.value)}
+          placeholder="https://api.anthropic.com"
+          className="w-full bg-surface-elevated text-text-primary rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary border border-border"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm text-text-secondary mb-1">
+          Model
+        </label>
+        <input
+          type="text"
+          value={modelName}
+          onChange={(e) => setModelName(e.target.value)}
+          placeholder="claude-sonnet-4-20250514"
+          className="w-full bg-surface-elevated text-text-primary rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary border border-border"
+        />
+      </div>
+
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="enableThinking"
+          checked={enableThinking}
+          onChange={(e) => setEnableThinking(e.target.checked)}
+          className="w-4 h-4 rounded border-border bg-surface-elevated text-primary focus:ring-primary"
+        />
+        <label htmlFor="enableThinking" className="text-sm text-text-secondary">
+          Enable Thinking (for models like GLM-4.7)
+        </label>
+      </div>
+
+      <div>
+        <label className="block text-sm text-text-secondary mb-1">
+          Theme
+        </label>
+        <select
+          value={theme}
+          onChange={(e) => setTheme(e.target.value as 'light' | 'dark')}
+          className="w-full bg-surface-elevated text-text-primary rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary border border-border"
+        >
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+        </select>
+      </div>
+    </div>
+
+    <div className="flex justify-end gap-2 mt-6">
+      <button
+        onClick={onSave}
+        className="px-4 py-2 text-sm bg-primary hover:bg-primary-hover text-white rounded transition-colors flex items-center gap-2"
+      >
+        <Check size={16} strokeWidth={1.5} />
+        {saved ? 'Saved!' : 'Save'}
+      </button>
+    </div>
+  </>
+);
+
+export const SettingsView: React.FC = () => {
+  const form = useSettingsForm();
+
+  return (
+    <div className="flex-1 overflow-y-auto p-6">
+      <div className="max-w-md mx-auto">
+        <h2 className="text-lg font-semibold text-text-primary mb-4">Settings</h2>
+        <SettingsFormContent {...form} onSave={form.handleSaveConfig} />
+      </div>
+    </div>
+  );
+};
+
+export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+  const form = useSettingsForm();
+
+  const handleSave = async () => {
+    await form.handleSaveConfig();
     onClose();
   };
 
@@ -64,87 +174,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           </button>
         </div>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm text-text-secondary mb-1">
-              API Key
-            </label>
-            <input
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="sk-ant-..."
-              className="w-full bg-surface-elevated text-text-primary rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary border border-border"
-            />
-          </div>
+        <SettingsFormContent
+          {...form}
+          onSave={handleSave}
+        />
 
-          <div>
-            <label className="block text-sm text-text-secondary mb-1">
-              Base URL
-            </label>
-            <input
-              type="text"
-              value={baseURL}
-              onChange={(e) => setBaseURL(e.target.value)}
-              placeholder="https://api.anthropic.com"
-              className="w-full bg-surface-elevated text-text-primary rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary border border-border"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm text-text-secondary mb-1">
-              Model
-            </label>
-            <input
-              type="text"
-              value={modelName}
-              onChange={(e) => setModelName(e.target.value)}
-              placeholder="claude-sonnet-4-20250514"
-              className="w-full bg-surface-elevated text-text-primary rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary border border-border"
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="enableThinking"
-              checked={enableThinking}
-              onChange={(e) => setEnableThinking(e.target.checked)}
-              className="w-4 h-4 rounded border-border bg-surface-elevated text-primary focus:ring-primary"
-            />
-            <label htmlFor="enableThinking" className="text-sm text-text-secondary">
-              Enable Thinking (for models like GLM-4.7)
-            </label>
-          </div>
-
-          <div>
-            <label className="block text-sm text-text-secondary mb-1">
-              Theme
-            </label>
-            <select
-              value={theme}
-              onChange={(e) => setTheme(e.target.value as 'light' | 'dark')}
-              className="w-full bg-surface-elevated text-text-primary rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary border border-border"
-            >
-              <option value="dark">Dark</option>
-              <option value="light">Light</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-2 mt-6">
+        <div className="flex justify-end mt-2">
           <button
             onClick={onClose}
             className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
           >
             Cancel
-          </button>
-          <button
-            onClick={handleSaveConfig}
-            className="px-4 py-2 text-sm bg-primary hover:bg-primary-hover text-white rounded transition-colors flex items-center gap-2"
-          >
-            <Check size={16} strokeWidth={1.5} />
-            Save
           </button>
         </div>
       </div>

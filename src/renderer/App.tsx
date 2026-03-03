@@ -2,11 +2,12 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { TitleBar } from './components/TitleBar';
 import { NavigationBar } from './components/NavigationBar';
+import type { ActiveView } from './components/NavigationBar';
 import { Sidebar } from './components/Sidebar';
 import { ChatPanel } from './components/ChatPanel';
 import { WelcomePage } from './components/WelcomePage';
-import { SettingsModal } from './components/SettingsModal';
-import { MCPConfigModal } from './components/MCPConfigModal';
+import { SettingsView } from './components/SettingsModal';
+import { MCPConfigView } from './components/MCPConfigModal';
 import { CommandPalette } from './components/CommandPalette';
 import { useAppStore } from './stores/app';
 import { themes, applyTheme } from './themes';
@@ -15,8 +16,7 @@ import type { Skill } from './shared/types';
 
 export const App: React.FC = () => {
   const { currentWorkspace, currentWorkspacePath, setWorkspace, config, setConfig, openCommandPalette, loadSkills, mcpStatuses, setMCPStatuses, setTodos, currentSessionId } = useAppStore();
-  const [showSettings, setShowSettings] = useState(false);
-  const [showMCPConfig, setShowMCPConfig] = useState(false);
+  const [activeView, setActiveView] = useState<ActiveView>('chat');
 
   useEffect(() => {
     if (config?.theme) {
@@ -27,6 +27,7 @@ export const App: React.FC = () => {
     }
   }, [config?.theme]);
 
+  // Initialization effect - runs once on mount
   useEffect(() => {
     window.manong.config.get().then(setConfig);
 
@@ -41,20 +42,25 @@ export const App: React.FC = () => {
       setMCPStatuses(statuses);
     });
 
-    const unsubscribeTodo = window.manong.todo.onUpdate((data) => {
-      // Only update if it's for the current session
-      if (data.sessionId === currentSessionId) {
-        setTodos(data.todos);
-      }
-    });
-
     window.manong.mcp.getStatus().then(setMCPStatuses);
 
     return () => {
       unsubscribe();
+    };
+  }, []);
+
+  // Todo listener - resubscribes when currentSessionId changes
+  useEffect(() => {
+    const unsubscribeTodo = window.manong.todo.onUpdate((data) => {
+      if (data.sessionId === useAppStore.getState().currentSessionId) {
+        setTodos(data.todos);
+      }
+    });
+
+    return () => {
       unsubscribeTodo();
     };
-  }, [setConfig, setWorkspace, loadSkills, setMCPStatuses, setTodos, currentSessionId]);
+  }, [currentSessionId, setTodos]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -124,6 +130,31 @@ export const App: React.FC = () => {
     window.manong.mcp.getStatus().then(setMCPStatuses);
   }, [setMCPStatuses]);
 
+  const renderMainContent = () => {
+    switch (activeView) {
+      case 'mcp':
+        return (
+          <MCPConfigView
+            statuses={mcpStatuses}
+            currentWorkspacePath={currentWorkspacePath}
+            onConnect={handleMCPConnect}
+            onDisconnect={handleMCPDisconnect}
+            onRefresh={handleMCPRefresh}
+          />
+        );
+      case 'settings':
+        return <SettingsView />;
+      case 'chat':
+      default:
+        return (
+          <>
+            <Sidebar />
+            <ChatPanel />
+          </>
+        );
+    }
+  };
+
   return (
     <div className="h-screen flex flex-col bg-background text-text-primary font-display antialiased">
       <TitleBar />
@@ -131,27 +162,16 @@ export const App: React.FC = () => {
         {currentWorkspace ? (
           <>
             <NavigationBar
-              onOpenSettings={() => setShowSettings(true)}
-              onOpenMCPConfig={() => setShowMCPConfig(true)}
+              activeView={activeView}
+              onViewChange={setActiveView}
             />
-            <Sidebar />
-            <ChatPanel />
+            {renderMainContent()}
           </>
         ) : (
           <WelcomePage />
         )}
       </div>
 
-      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
-      <MCPConfigModal
-        isOpen={showMCPConfig}
-        onClose={() => setShowMCPConfig(false)}
-        statuses={mcpStatuses}
-        currentWorkspacePath={currentWorkspacePath}
-        onConnect={handleMCPConnect}
-        onDisconnect={handleMCPDisconnect}
-        onRefresh={handleMCPRefresh}
-      />
       <CommandPalette onSelectSkill={handleSelectSkill} />
     </div>
   );

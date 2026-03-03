@@ -1,6 +1,8 @@
 import React from 'react';
-import { FolderOpen } from 'lucide-react';
+import { FolderOpen, Minus, Square, X } from 'lucide-react';
 import { useAppStore } from '../stores/app';
+
+const isMac = window.manong.platform === 'darwin';
 
 export const TitleBar: React.FC = () => {
   const { currentWorkspace, setWorkspace, isStreaming } = useAppStore();
@@ -14,14 +16,10 @@ export const TitleBar: React.FC = () => {
 
   return (
     <header className="title-bar h-10 border-b border-border bg-surface-elevated flex items-center justify-between px-4 shrink-0 z-20">
-      {/* Left - Traffic lights + AGENT label + folder */}
+      {/* Left - Traffic light spacer (macOS) + AGENT label + folder */}
       <div className="flex items-center gap-3">
-        {/* Traffic lights space */}
-        <div className="flex gap-1.5 opacity-60 hover:opacity-100 transition-opacity">
-          <div className="w-2.5 h-2.5 rounded-full bg-active" />
-          <div className="w-2.5 h-2.5 rounded-full bg-active" />
-          <div className="w-2.5 h-2.5 rounded-full bg-active" />
-        </div>
+        {/* macOS: spacer for native traffic lights */}
+        {isMac && <div className="w-14" />}
 
         {/* AGENT label + folder */}
         <div className="flex items-center text-xs gap-2">
@@ -50,7 +48,7 @@ export const TitleBar: React.FC = () => {
         </div>
       </div>
 
-      {/* Right - Status only */}
+      {/* Right - Status + Window controls (Windows/Linux) */}
       <div className="flex items-center gap-2">
         <span className="text-[10px] font-mono text-text-secondary uppercase">
           {isStreaming ? 'Processing' : 'Idle'}
@@ -60,6 +58,33 @@ export const TitleBar: React.FC = () => {
             isStreaming ? 'bg-primary streaming-indicator' : 'bg-green-500'
           }`}
         />
+
+        {/* Windows/Linux window controls */}
+        {!isMac && (
+          <div className="flex items-center ml-3">
+            <button
+              onClick={() => window.manong.window.minimize()}
+              className="w-8 h-8 flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-hover transition-colors"
+              title="Minimize"
+            >
+              <Minus size={16} strokeWidth={1.5} />
+            </button>
+            <button
+              onClick={() => window.manong.window.maximize()}
+              className="w-8 h-8 flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-hover transition-colors"
+              title="Maximize"
+            >
+              <Square size={14} strokeWidth={1.5} />
+            </button>
+            <button
+              onClick={() => window.manong.window.close()}
+              className="w-8 h-8 flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-red-500/20 transition-colors"
+              title="Close"
+            >
+              <X size={16} strokeWidth={1.5} />
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

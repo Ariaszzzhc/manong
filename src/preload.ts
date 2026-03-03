@@ -4,6 +4,8 @@ import type { Session, StreamEvent, AppConfig, Workspace, WorkspaceData, Skill, 
 import type { MCPConfig, MCPServerStatus, LayeredMCPConfig } from './shared/mcp-types';
 
 const api = {
+  platform: process.platform,
+
   agent: {
     start: (
       sessionId: string,
