@@ -39,7 +39,15 @@ export interface ThinkingPart {
   text: string;
 }
 
-export type Part = TextPart | ToolCallPart | ToolResultPart | ThinkingPart;
+export interface ImagePart {
+  type: 'image';
+  mediaType: 'image/png' | 'image/jpeg' | 'image/gif' | 'image/webp';
+  data: string;
+  thumbnailData: string;
+  filename?: string;
+}
+
+export type Part = TextPart | ToolCallPart | ToolResultPart | ThinkingPart | ImagePart;
 
 export interface UserMessage {
   id: string;

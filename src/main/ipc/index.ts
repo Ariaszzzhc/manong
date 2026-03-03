@@ -5,6 +5,7 @@ import type {
   StreamEvent,
   AppConfig,
   QuestionAnswer,
+  ImagePart,
 } from '../../shared/types';
 import type { MCPConfig, MCPServerStatus, LayeredMCPConfig } from '../../shared/mcp-types';
 import { AgentLoop } from '../services/agent/loop';
@@ -137,11 +138,12 @@ export function setupIPC(mainWindow: BrowserWindow): void {
     IPC_CHANNELS.AGENT_START,
     (
       _event,
-      { sessionId, message, providerConfig, workspacePath }: {
+      { sessionId, message, providerConfig, workspacePath, images = [] }: {
         sessionId: string;
         message: string;
         providerConfig: AppConfig['providers'][0];
         workspacePath: string;
+        images: ImagePart[];
       }
     ) => {
       const session = storageService.getSession(workspacePath, sessionId);
@@ -151,7 +153,7 @@ export function setupIPC(mainWindow: BrowserWindow): void {
         agentLoop.setProvider(providerConfig);
       }
 
-      agentLoop.start(session, workspacePath, message, (event: StreamEvent) => {
+      agentLoop.start(session, workspacePath, message, images, (event: StreamEvent) => {
         mainWindow.webContents.send(IPC_CHANNELS.AGENT_STREAM, event);
       });
     }

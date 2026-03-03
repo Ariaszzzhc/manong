@@ -4,6 +4,7 @@ import type {
   Message,
   StreamEvent,
   ProviderConfig,
+  ImagePart,
 } from '../../../shared/types';
 import { AgentExecutor } from './executor';
 import { cancelPendingQuestions } from '../tools/ask';
@@ -125,6 +126,7 @@ export class AgentLoop {
     session: Session,
     workingDir: string,
     userMessage: string,
+    images: ImagePart[],
     onEvent: (event: StreamEvent) => void
   ): Promise<void> {
     if (!this.provider) {
@@ -139,11 +141,14 @@ export class AgentLoop {
 
     this.workingDir = workingDir;
 
-    if (userMessage.trim()) {
+    if (userMessage.trim() || images.length > 0) {
       const userMsg: Message = {
         id: uuidv4(),
         role: 'user',
-        parts: [{ type: 'text', text: userMessage }],
+        parts: [
+          ...images,
+          ...(userMessage.trim() ? [{ type: 'text' as const, text: userMessage }] : []),
+        ],
         createdAt: Date.now(),
       };
       session.messages.push(userMsg);

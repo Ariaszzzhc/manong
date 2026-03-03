@@ -5,7 +5,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { Copy, Check, Loader2 } from 'lucide-react';
 import hljs from 'highlight.js';
-import type { Message, Part } from '../../shared/types';
+import type { Message, Part, ImagePart } from '../../shared/types';
 import { ToolGroupCollapse } from './ToolGroupCollapse';
 import { ThinkingCollapse } from './ThinkingCollapse';
 import { MermaidBlock } from './MermaidBlock';
@@ -26,9 +26,10 @@ export const MessageItem: React.FC<MessageItemProps> = ({
   const parts = isStreaming && pendingParts ? pendingParts : message.parts;
   const isUser = message.role === 'user';
 
-  // Separate thinking, tool, and text parts
+  // Separate thinking, tool, image, and text parts
   const thinkingParts = parts.filter((p) => p.type === 'thinking');
-  const toolParts = parts.filter((p) => p.type !== 'text' && p.type !== 'thinking');
+  const toolParts = parts.filter((p) => p.type !== 'text' && p.type !== 'thinking' && p.type !== 'image');
+  const imageParts = parts.filter((p) => p.type === 'image') as ImagePart[];
   const textParts = parts.filter((p) => p.type === 'text');
 
   // Get first thinking part text
@@ -48,6 +49,20 @@ export const MessageItem: React.FC<MessageItemProps> = ({
 
           {/* Tool calls grouped in collapsible section */}
           {toolParts.length > 0 && <ToolGroupCollapse parts={toolParts} />}
+
+          {/* Images in user messages */}
+          {isUser && imageParts.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {imageParts.map((img, idx) => (
+                <img
+                  key={idx}
+                  src={`data:${img.mediaType};base64,${img.thumbnailData}`}
+                  alt={img.filename ?? 'image'}
+                  className="max-w-[300px] max-h-[200px] object-contain rounded-lg border border-border"
+                />
+              ))}
+            </div>
+          )}
 
           {/* Text content */}
           <div className="space-y-4">

@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from './shared/ipc';
-import type { Session, StreamEvent, AppConfig, Workspace, WorkspaceData, Skill, SkillExecuteResult, QuestionRequest, QuestionAnswer, Message, Todo } from './shared/types';
+import type { Session, StreamEvent, AppConfig, Workspace, WorkspaceData, Skill, SkillExecuteResult, QuestionRequest, QuestionAnswer, Message, Todo, ImagePart } from './shared/types';
 import type { MCPConfig, MCPServerStatus, LayeredMCPConfig } from './shared/mcp-types';
 
 const api = {
@@ -11,13 +11,15 @@ const api = {
       sessionId: string,
       message: string,
       providerConfig: AppConfig['providers'][0] | undefined,
-      workspacePath: string
+      workspacePath: string,
+      images: ImagePart[] = []
     ) => {
       ipcRenderer.send(IPC_CHANNELS.AGENT_START, {
         sessionId,
         message,
         providerConfig,
         workspacePath,
+        images,
       });
     },
     stop: () => {
