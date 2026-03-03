@@ -9,9 +9,13 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#EA580C',
-          hover: '#C2410C',
+          DEFAULT: 'var(--primary)',
+          hover: 'var(--primary-hover)',
         },
+        success: 'var(--success)',
+        warning: 'var(--warning)',
+        error: 'var(--error)',
+        info: 'var(--info)',
         // Theme-aware colors using CSS variables
         background: 'var(--background)',
         surface: 'var(--surface)',

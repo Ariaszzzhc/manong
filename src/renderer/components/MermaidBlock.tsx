@@ -60,11 +60,11 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ code }) => {
 
   if (error) {
     return (
-      <div className="my-4 p-4 bg-red-900/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
+      <div className="my-4 p-4 bg-error/10 border border-error/50 rounded-lg text-error text-sm">
         <div className="font-semibold mb-1">Mermaid Syntax Error</div>
         <pre className="text-xs overflow-x-auto whitespace-pre-wrap">{error}</pre>
         <details className="mt-2">
-          <summary className="cursor-pointer text-xs text-red-300 hover:text-red-200">View source code</summary>
+          <summary className="cursor-pointer text-xs text-error/80 hover:text-error">View source code</summary>
           <pre className="mt-2 p-2 bg-surface rounded text-xs overflow-x-auto">{code}</pre>
         </details>
       </div>

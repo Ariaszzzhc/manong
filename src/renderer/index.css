@@ -253,6 +253,7 @@ code, pre, .font-mono {
 
 /* Selection styling */
 ::selection {
-  background-color: rgba(234, 88, 12, 0.2);
-  color: #EA580C;
+  background-color: var(--primary);
+  color: #FFFFFF;
+  opacity: 0.3;
 }

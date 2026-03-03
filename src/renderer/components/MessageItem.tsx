@@ -166,7 +166,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ filename, code, language }
           onClick={handleCopy}
           className={`absolute right-0 text-[11px] px-2.5 py-1.5 rounded-md flex items-center gap-1.5 transition-all duration-200 backdrop-blur-md bg-surface/90 border border-border/50 shadow-sm ${
             copied 
-              ? 'text-green-400 border-green-500/30 opacity-100 translate-y-0' 
+              ? 'text-success border-success/30 opacity-100 translate-y-0' 
               : 'text-text-secondary hover:text-text-primary opacity-0 translate-y-1 group-hover/code:opacity-100 group-hover/code:translate-y-0'
           }`}
         >

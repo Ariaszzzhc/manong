@@ -25,38 +25,62 @@ export interface ThemeTokens {
   // Scrollbar
   scrollbarThumb: string;       // Scrollbar thumb color
   scrollbarThumbHover: string;  // Scrollbar thumb hover color
+
+  // Brand & Status
+  primary: string;          // Brand primary color
+  primaryHover: string;     // Brand primary hover color
+  success: string;          // Success state
+  warning: string;          // Warning state
+  error: string;            // Error state
+  info: string;             // Info state
 }
 
 export const lightTokens: ThemeTokens = {
-  background: '#FAFAFA',
-  surface: '#FFFFFF',
-  surfaceElevated: '#F4F4F5',
-  textPrimary: '#09090B',
-  textSecondary: '#71717A',
-  border: '#E4E4E7',
-  borderFocus: '#09090B',
-  hover: '#F4F4F5',
-  active: '#E4E4E7',
-  codeBackground: '#F4F4F5',
-  codeBorder: '#E4E4E7',
-  scrollbarThumb: '#D4D4D8',
-  scrollbarThumbHover: '#A1A1AA',
+  background: '#F9FAFB',      // Gray 50 - Main background
+  surface: '#FFFFFF',         // White - Card/panel background
+  surfaceElevated: '#F3F4F6', // Gray 100 - Floating/popup/input background
+  textPrimary: '#111827',     // Gray 900 - Primary text
+  textSecondary: '#6B7280',   // Gray 500 - Secondary text
+  border: '#E5E7EB',          // Gray 200 - Default border
+  borderFocus: '#111827',     // Gray 900 - Focus border
+  hover: '#F3F4F6',           // Gray 100 - Hover state
+  active: '#E5E7EB',          // Gray 200 - Active state
+  codeBackground: '#F9FAFB',  // Gray 50 - Code block background
+  codeBorder: '#E5E7EB',      // Gray 200 - Code block border
+  scrollbarThumb: '#D1D5DB',  // Gray 300
+  scrollbarThumbHover: '#9CA3AF', // Gray 400
+  
+  // Brand & Status - Blue/Indigo based for professional look
+  primary: '#2563EB',         // Blue 600
+  primaryHover: '#1D4ED8',    // Blue 700
+  success: '#059669',         // Emerald 600
+  warning: '#D97706',         // Amber 600
+  error: '#DC2626',           // Red 600
+  info: '#2563EB',            // Blue 600
 };
 
 export const darkTokens: ThemeTokens = {
-  background: '#09090B', // Zinc 950
-  surface: '#18181B',    // Zinc 900
+  background: '#09090B',      // Zinc 950
+  surface: '#18181B',         // Zinc 900
   surfaceElevated: '#27272A', // Zinc 800
-  textPrimary: '#FAFAFA', // Zinc 50
-  textSecondary: '#A1A1AA', // Zinc 400
-  border: '#27272A',     // Zinc 800
-  borderFocus: '#FAFAFA', // Zinc 50 (white for focus)
-  hover: '#27272A',      // Zinc 800
-  active: '#3F3F46',     // Zinc 700
-  codeBackground: '#000000', // Pure black for code
-  codeBorder: '#27272A', // Zinc 800
-  scrollbarThumb: '#3F3F46',
-  scrollbarThumbHover: '#52525B',
+  textPrimary: '#FAFAFA',     // Zinc 50
+  textSecondary: '#A1A1AA',   // Zinc 400
+  border: '#27272A',          // Zinc 800
+  borderFocus: '#FAFAFA',     // Zinc 50
+  hover: '#27272A',           // Zinc 800
+  active: '#3F3F46',          // Zinc 700
+  codeBackground: '#000000',  // Pure black
+  codeBorder: '#27272A',      // Zinc 800
+  scrollbarThumb: '#3F3F46',  // Zinc 700
+  scrollbarThumbHover: '#52525B', // Zinc 600
+
+  // Brand & Status
+  primary: '#3B82F6',         // Blue 500
+  primaryHover: '#60A5FA',    // Blue 400
+  success: '#10B981',         // Emerald 500
+  warning: '#F59E0B',         // Amber 500
+  error: '#EF4444',           // Red 500
+  info: '#3B82F6',            // Blue 500
 };
 
 // Convert camelCase to kebab-case for CSS variable names

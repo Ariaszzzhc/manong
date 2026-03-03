@@ -5,7 +5,7 @@ import { useAppStore } from '../stores/app';
 const isMac = window.manong.platform === 'darwin';
 
 export const TitleBar: React.FC = () => {
-  const { currentWorkspace, setWorkspace, isStreaming } = useAppStore();
+  const { currentWorkspace, setWorkspace } = useAppStore();
 
   const handleSwitchWorkspace = async () => {
     const data = await window.manong.workspace.open();
@@ -48,17 +48,8 @@ export const TitleBar: React.FC = () => {
         </div>
       </div>
 
-      {/* Right - Status + Window controls (Windows/Linux) */}
+      {/* Right - Window controls (Windows/Linux) */}
       <div className="flex items-center gap-2">
-        <span className="text-[10px] font-mono text-text-secondary uppercase">
-          {isStreaming ? 'Processing' : 'Idle'}
-        </span>
-        <div
-          className={`w-1.5 h-1.5 rounded-full ${
-            isStreaming ? 'bg-primary streaming-indicator' : 'bg-green-500'
-          }`}
-        />
-
         {/* Windows/Linux window controls */}
         {!isMac && (
           <div className="flex items-center ml-3">
@@ -78,7 +69,7 @@ export const TitleBar: React.FC = () => {
             </button>
             <button
               onClick={() => window.manong.window.close()}
-              className="w-8 h-8 flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-red-500/20 transition-colors"
+              className="w-8 h-8 flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-error/20 transition-colors"
               title="Close"
             >
               <X size={16} strokeWidth={1.5} />

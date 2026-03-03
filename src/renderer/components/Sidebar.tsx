@@ -162,7 +162,7 @@ export const Sidebar: React.FC = () => {
         </div>
         <div className="w-full bg-surface-elevated h-[3px] rounded-full overflow-hidden">
           <div
-            className="h-full transition-all duration-300 bg-gradient-to-r from-emerald-400 to-emerald-600"
+            className="h-full transition-all duration-300 bg-primary"
             style={{ width: `${usagePercent}%` }}
           />
         </div>

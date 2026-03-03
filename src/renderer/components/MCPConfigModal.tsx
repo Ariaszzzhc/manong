@@ -241,11 +241,11 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
 
     const colorClass =
       status.status === 'connected'
-        ? 'bg-green-500/20 text-green-400'
+        ? 'bg-success/20 text-success'
         : status.status === 'connecting'
-        ? 'bg-yellow-500/20 text-yellow-400'
+        ? 'bg-warning/20 text-warning'
         : status.status === 'error'
-        ? 'bg-red-500/20 text-red-400'
+        ? 'bg-error/20 text-error'
         : 'bg-surface-elevated text-text-secondary';
 
     return (
@@ -513,12 +513,16 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                       </span>
                       {getStatusBadge(name)}
                       {source === 'project' ? (
-                        <Folder size={12} className="text-primary" title="Project config" />
+                        <div title="Project config">
+                          <Folder size={12} className="text-primary" />
+                        </div>
                       ) : (
-                        <Globe size={12} className="text-text-secondary" title="Global config" />
+                        <div title="Global config">
+                          <Globe size={12} className="text-text-secondary" />
+                        </div>
                       )}
                       {isDisabled && (
-                        <span className="text-[10px] text-red-400">disabled</span>
+                        <span className="text-[10px] text-error">disabled</span>
                       )}
                     </div>
                     <div className="text-xs text-text-secondary truncate mt-0.5">
@@ -527,7 +531,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                         : `${serverConfig.command || 'npx'} ${(serverConfig.args || []).join(' ')}`}
                     </div>
                     {status?.status === 'connected' && !isDisabled && (
-                      <div className="text-xs text-green-400 mt-0.5">
+                      <div className="text-xs text-success mt-0.5">
                         {status.toolCount} tools available
                       </div>
                     )}
@@ -536,14 +540,14 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                     {!isDisabled && status?.status === 'connected' ? (
                       <button
                         onClick={() => onDisconnect(name)}
-                        className="px-2 py-1 text-xs text-yellow-400 hover:bg-yellow-500/20 rounded transition-colors"
+                        className="px-2 py-1 text-xs text-warning hover:bg-warning/20 rounded transition-colors"
                       >
                         Disconnect
                       </button>
                     ) : !isDisabled && status?.status === 'disconnected' ? (
                       <button
                         onClick={() => onConnect(name)}
-                        className="px-2 py-1 text-xs text-green-400 hover:bg-green-500/20 rounded transition-colors flex items-center gap-1"
+                        className="px-2 py-1 text-xs text-success hover:bg-success/20 rounded transition-colors flex items-center gap-1"
                       >
                         <RefreshCw size={12} strokeWidth={1.5} />
                         Connect
@@ -563,7 +567,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                         </button>
                         <button
                           onClick={() => handleDeleteServer(name, activeTab === 'global' ? 'global' : 'project')}
-                          className="p-1 text-text-secondary hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
+                          className="p-1 text-text-secondary hover:text-error hover:bg-error/10 rounded transition-colors"
                         >
                           <Trash2 size={14} strokeWidth={1.5} />
                         </button>
@@ -578,7 +582,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                         {isDisabled ? (
                           <ToggleLeft size={16} strokeWidth={1.5} />
                         ) : (
-                          <ToggleRight size={16} className="text-green-400" strokeWidth={1.5} />
+                          <ToggleRight size={16} className="text-success" strokeWidth={1.5} />
                         )}
                       </button>
                     )}

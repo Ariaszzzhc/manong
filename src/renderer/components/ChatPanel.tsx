@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { PlusCircle, Image, Terminal, ArrowUp } from 'lucide-react';
+import { PlusCircle, Image, Terminal, ArrowUp, Square } from 'lucide-react';
 import { useAppStore } from '../stores/app';
 import { MessageItem } from './MessageItem';
 import { QuestionCard } from './QuestionCard';
@@ -190,6 +190,11 @@ export const ChatPanel: React.FC = () => {
     }
   };
 
+  const handleStop = () => {
+    window.manong.agent.stop();
+    useAppStore.getState().stopStreaming();
+  };
+
   if (!currentSession) {
     return (
       <div className="flex-1 flex items-center justify-center bg-background text-text-secondary">
@@ -288,17 +293,35 @@ export const ChatPanel: React.FC = () => {
 
                 {/* Right buttons */}
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-text-secondary font-mono mr-1 hidden sm:inline-block">
-                    CTRL + ENTER
-                  </span>
-                  <button
-                    onClick={handleSend}
-                    disabled={!input.trim() || isStreaming}
-                    className="p-1.5 bg-text-primary text-background rounded-lg hover:opacity-90 disabled:opacity-30 disabled:bg-surface-elevated disabled:text-text-secondary transition-all"
-                    title="Send message"
-                  >
-                    <ArrowUp size={16} strokeWidth={2} />
-                  </button>
+                  {isStreaming ? (
+                    <>
+                      <span className="text-[10px] text-text-secondary font-mono mr-1 hidden sm:inline-flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary streaming-indicator" />
+                        Processing...
+                      </span>
+                      <button
+                        onClick={handleStop}
+                        className="p-1.5 bg-error text-white rounded-lg hover:bg-error/90 transition-all"
+                        title="Stop generation"
+                      >
+                        <Square size={14} fill="currentColor" strokeWidth={0} />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-[10px] text-text-secondary font-mono mr-1 hidden sm:inline-block">
+                        CTRL + ENTER
+                      </span>
+                      <button
+                        onClick={handleSend}
+                        disabled={!input.trim()}
+                        className="p-1.5 bg-text-primary text-background rounded-lg hover:opacity-90 disabled:opacity-30 disabled:bg-surface-elevated disabled:text-text-secondary transition-all"
+                        title="Send message"
+                      >
+                        <ArrowUp size={16} strokeWidth={2} />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

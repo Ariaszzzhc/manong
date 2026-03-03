@@ -12,11 +12,11 @@ interface MCPStatusPanelProps {
 const getStatusColor = (status: MCPConnectionStatus): string => {
   switch (status) {
     case 'connected':
-      return 'text-green-500';
+      return 'text-success';
     case 'connecting':
-      return 'text-yellow-500';
+      return 'text-warning';
     case 'error':
-      return 'text-red-500';
+      return 'text-error';
     default:
       return 'text-text-secondary';
   }
@@ -25,11 +25,11 @@ const getStatusColor = (status: MCPConnectionStatus): string => {
 const getStatusBgColor = (status: MCPConnectionStatus): string => {
   switch (status) {
     case 'connected':
-      return 'bg-green-500/10';
+      return 'bg-success/10';
     case 'connecting':
-      return 'bg-yellow-500/10';
+      return 'bg-warning/10';
     case 'error':
-      return 'bg-red-500/10';
+      return 'bg-error/10';
     default:
       return 'bg-surface-elevated';
   }
@@ -89,13 +89,17 @@ export const MCPStatusPanel: React.FC<MCPStatusPanelProps> = ({
                       {server.name}
                     </span>
                     {server.source === 'project' ? (
-                      <Folder size={10} className="text-primary" title="Project config" />
+                      <div title="Project config">
+                        <Folder size={10} className="text-primary" />
+                      </div>
                     ) : (
-                      <Globe size={10} className="text-text-secondary" title="Global config" />
+                      <div title="Global config">
+                        <Globe size={10} className="text-text-secondary" />
+                      </div>
                     )}
                   </div>
                   {server.error && (
-                    <div className="text-[10px] text-red-400 truncate">
+                    <div className="text-[10px] text-error truncate">
                       {server.error}
                     </div>
                   )}

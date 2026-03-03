@@ -130,7 +130,7 @@ export const ToolPartView: React.FC<ToolPartViewProps> = ({ toolCall, toolResult
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center justify-center w-5 h-5 rounded-md bg-surface border border-border shadow-sm">
-          <Icon size={11} className={isError ? 'text-red-400' : isPending ? 'text-yellow-400' : 'text-text-primary'} strokeWidth={2} />
+          <Icon size={11} className={isError ? 'text-error' : isPending ? 'text-warning' : 'text-text-primary'} strokeWidth={2} />
         </div>
         
         <div className="flex-1 min-w-0 flex items-center gap-2">
@@ -156,12 +156,12 @@ export const ToolPartView: React.FC<ToolPartViewProps> = ({ toolCall, toolResult
         <div className="mt-2 text-[11px] font-mono bg-code-bg border border-code-border rounded-lg p-3 space-y-3 shadow-sm">
           {/* Arguments */}
           <div className="flex gap-2">
-            <span className="text-blue-400 shrink-0">$</span>
+            <span className="text-info shrink-0">$</span>
             <div className="overflow-x-auto whitespace-pre-wrap break-all">
               {Object.entries(toolCall.args).map(([k, v]) => (
                 <span key={k} className="mr-2">
-                  <span className="text-pink-400">--{k}</span>=
-                  <span className="text-green-300">
+                  <span className="text-primary">--{k}</span>=
+                  <span className="text-success">
                     {typeof v === 'string' ? `"${v}"` : JSON.stringify(v)}
                   </span>
                 </span>
@@ -173,7 +173,7 @@ export const ToolPartView: React.FC<ToolPartViewProps> = ({ toolCall, toolResult
           {toolResult && (
             <div className="flex gap-2 pt-2 border-t border-code-border/50">
               <span className="text-text-secondary shrink-0">{'>'}</span>
-              <div className={`overflow-x-auto whitespace-pre-wrap break-all max-h-60 overflow-y-auto w-full ${isError ? 'text-red-400' : 'text-text-secondary'}`}>
+              <div className={`overflow-x-auto whitespace-pre-wrap break-all max-h-60 overflow-y-auto w-full ${isError ? 'text-error' : 'text-text-secondary'}`}>
                 {typeof toolResult.result === 'string'
                   ? toolResult.result
                   : JSON.stringify(toolResult.result, null, 2)}

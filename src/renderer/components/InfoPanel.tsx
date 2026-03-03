@@ -35,47 +35,47 @@ export const InfoPanel: React.FC = () => {
     : 0;
 
   return (
-    <div className="w-72 bg-zinc-900 border-l border-zinc-800 p-4 overflow-y-auto">
-      <h3 className="text-sm font-semibold text-zinc-400 uppercase mb-4">
+    <div className="w-72 bg-surface border-l border-border p-4 overflow-y-auto">
+      <h3 className="text-sm font-semibold text-text-secondary uppercase mb-4">
         Session Info
       </h3>
 
       {/* Stats */}
       <div className="mb-6">
-        <label className="text-xs text-zinc-500 uppercase">Statistics</label>
+        <label className="text-xs text-text-secondary uppercase">Statistics</label>
         <div className="mt-2 space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-zinc-400">Messages</span>
-            <span className="text-zinc-300">
+            <span className="text-text-secondary">Messages</span>
+            <span className="text-text-primary">
               {currentSession?.messages.length ?? 0}
             </span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-zinc-400">Tool Calls</span>
-            <span className="text-zinc-300">{toolCalls ?? 0}</span>
+            <span className="text-text-secondary">Tool Calls</span>
+            <span className="text-text-primary">{toolCalls ?? 0}</span>
           </div>
         </div>
       </div>
 
       {/* Token Usage - Cumulative */}
       <div className="mb-6">
-        <label className="text-xs text-zinc-500 uppercase">Cumulative Usage</label>
+        <label className="text-xs text-text-secondary uppercase">Cumulative Usage</label>
         <div className="mt-2 space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-zinc-400">Input</span>
-            <span className="text-zinc-300">
+            <span className="text-text-secondary">Input</span>
+            <span className="text-text-primary">
               {formatTokens(tokenUsage?.inputTokens ?? 0)}
             </span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-zinc-400">Output</span>
-            <span className="text-zinc-300">
+            <span className="text-text-secondary">Output</span>
+            <span className="text-text-primary">
               {formatTokens(tokenUsage?.outputTokens ?? 0)}
             </span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-zinc-400 font-medium">Total</span>
-            <span className="text-zinc-200 font-medium">
+            <span className="text-text-secondary font-medium">Total</span>
+            <span className="text-text-primary font-medium">
               {formatTokens(totalTokens)}
             </span>
           </div>
@@ -85,11 +85,11 @@ export const InfoPanel: React.FC = () => {
       {/* Token Usage - Current Context */}
       {lastUsage && (
         <div className="mb-6">
-          <label className="text-xs text-zinc-500 uppercase">Current Context</label>
+          <label className="text-xs text-text-secondary uppercase">Current Context</label>
           <div className="mt-2">
             <div className="flex justify-between text-sm">
-              <span className="text-zinc-400">Tokens</span>
-              <span className="text-zinc-200 font-medium">
+              <span className="text-text-secondary">Tokens</span>
+              <span className="text-text-primary font-medium">
                 {formatTokens(contextTokens)}
               </span>
             </div>
@@ -99,14 +99,14 @@ export const InfoPanel: React.FC = () => {
 
       {/* Status */}
       <div className="mb-6">
-        <label className="text-xs text-zinc-500 uppercase">Status</label>
+        <label className="text-xs text-text-secondary uppercase">Status</label>
         <div className="mt-2 flex items-center gap-2">
           <div
             className={`w-2 h-2 rounded-full ${
-              isStreaming ? 'bg-green-500 streaming-indicator' : 'bg-zinc-500'
+              isStreaming ? 'bg-success streaming-indicator' : 'bg-text-secondary'
             }`}
           />
-          <span className="text-sm text-zinc-400">
+          <span className="text-sm text-text-secondary">
             {isStreaming ? 'Processing...' : 'Idle'}
           </span>
         </div>
@@ -114,8 +114,8 @@ export const InfoPanel: React.FC = () => {
 
       {/* Recent Changes */}
       <div>
-        <label className="text-xs text-zinc-500 uppercase">Recent Changes</label>
-        <div className="mt-2 text-sm text-zinc-500">
+        <label className="text-xs text-text-secondary uppercase">Recent Changes</label>
+        <div className="mt-2 text-sm text-text-secondary">
           {currentSession?.messages.some((m) =>
             m.parts.some(
               (p) =>
@@ -139,7 +139,7 @@ export const InfoPanel: React.FC = () => {
                   return (
                     <div
                       key={idx}
-                      className="text-zinc-400 font-mono text-xs truncate"
+                      className="text-text-secondary font-mono text-xs truncate"
                     >
                       {args.file_path}
                     </div>
