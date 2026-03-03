@@ -67,9 +67,9 @@ export const Sidebar: React.FC = () => {
             {groupedSessions.current.map((session) => (
               <div
                 key={session.id}
-                className="flex items-center gap-2 px-2 py-2 rounded bg-hover text-text-primary text-xs group transition-all border-l-2 border-primary cursor-pointer"
+                className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-surface-elevated text-text-primary text-[13px] group transition-all cursor-pointer shadow-sm border border-border"
               >
-                <Terminal size={14} className="text-primary" strokeWidth={1.5} />
+                <Terminal size={14} className="text-text-primary opacity-80" strokeWidth={1.5} />
                 <span className="truncate font-medium flex-1">
                   {session.title || 'New Chat'}
                 </span>
@@ -87,10 +87,10 @@ export const Sidebar: React.FC = () => {
             {groupedSessions.history.map((session) => (
               <div
                 key={session.id}
-                className="group flex items-center gap-2 px-2 py-2 rounded hover:bg-hover text-text-secondary hover:text-text-primary text-xs transition-colors mb-0.5 cursor-pointer"
+                className="group flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-hover text-text-secondary hover:text-text-primary text-[13px] transition-colors mb-0.5 cursor-pointer"
                 onClick={() => setCurrentSession(session)}
               >
-                <Code size={14} strokeWidth={1.5} />
+                <Code size={14} className="opacity-60" strokeWidth={1.5} />
                 <span className="truncate flex-1">
                   {session.title || 'New Chat'}
                 </span>
@@ -155,19 +155,19 @@ export const Sidebar: React.FC = () => {
       )}
 
       {/* Context Usage Bar */}
-      <div className="p-3 border-t border-border bg-surface-elevated">
-        <div className="flex items-center justify-between text-[10px] text-text-secondary font-mono mb-1">
-          <span>CONTEXT USAGE</span>
+      <div className="p-4 border-t border-border bg-surface">
+        <div className="flex items-center justify-between text-[10px] text-text-secondary font-mono mb-1.5 uppercase tracking-wider">
+          <span>Context Usage</span>
           <span>{usagePercent.toFixed(0)}%</span>
         </div>
-        <div className="w-full bg-active h-1 rounded-full overflow-hidden">
+        <div className="w-full bg-surface-elevated h-[3px] rounded-full overflow-hidden">
           <div
-            className="bg-primary h-full transition-all duration-300"
+            className="h-full transition-all duration-300 bg-gradient-to-r from-emerald-400 to-emerald-600"
             style={{ width: `${usagePercent}%` }}
           />
         </div>
         {totalTokens > 0 && (
-          <div className="text-[10px] text-text-secondary mt-1 font-mono">
+          <div className="text-[10px] text-text-secondary mt-1.5 font-mono text-right opacity-70">
             {formatTokens(totalTokens)} tokens
           </div>
         )}

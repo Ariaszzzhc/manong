@@ -29,7 +29,7 @@ export const ChatPanel: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const shouldAutoScrollRef = useRef(true);
-  const rafRef = useRef<number>();
+  const rafRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     // Use requestAnimationFrame to throttle scroll calls
@@ -211,93 +211,97 @@ export const ChatPanel: React.FC = () => {
   }
 
   return (
-    <main className="flex-1 flex flex-col bg-background">
+    <main className="flex-1 flex flex-col bg-background relative">
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
-        {currentSession.messages.map((message) => (
-          <MessageItem key={message.id} message={message} />
-        ))}
+      <div className="flex-1 overflow-y-auto px-4 pb-32">
+        <div className="max-w-4xl mx-auto pt-8">
+          {currentSession.messages.map((message) => (
+            <MessageItem key={message.id} message={message} />
+          ))}
 
-        {/* Streaming message */}
-        {isStreaming && pendingMessageId && (
-          <MessageItem
-            message={{
-              id: pendingMessageId,
-              role: 'assistant',
-              parts: pendingParts,
-              createdAt: Date.now(),
-            }}
-            isStreaming
-            pendingParts={pendingParts}
-          />
-        )}
+          {/* Streaming message */}
+          {isStreaming && pendingMessageId && (
+            <MessageItem
+              message={{
+                id: pendingMessageId,
+                role: 'assistant',
+                parts: pendingParts,
+                createdAt: Date.now(),
+              }}
+              isStreaming
+              pendingParts={pendingParts}
+            />
+          )}
 
-        <div ref={messagesEndRef} />
+          <div ref={messagesEndRef} className="h-4" />
+        </div>
       </div>
 
-      {/* Input area */}
-      <div className="border-t border-border p-4">
-        <div className="max-w-3xl mx-auto">
+      {/* Input area - Floating Pill */}
+      <div className="absolute bottom-6 left-0 right-0 px-4 pointer-events-none z-10 flex justify-center">
+        <div className="w-full max-w-3xl pointer-events-auto">
           {pendingQuestion ? (
-            <QuestionCard
-              questions={pendingQuestion.questions}
-              onSubmit={handleQuestionSubmit}
-              onSkip={handleQuestionSkip}
-            />
+            <div className="shadow-2xl rounded-2xl overflow-hidden border border-border backdrop-blur-xl" style={{ backgroundColor: 'color-mix(in srgb, var(--surface) 80%, transparent)' }}>
+              <QuestionCard
+                questions={pendingQuestion.questions}
+                onSubmit={handleQuestionSubmit}
+                onSkip={handleQuestionSkip}
+              />
+            </div>
           ) : (
-            <>
-              <div className="relative">
-                <textarea
-                  ref={inputRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Type a command or ask a question..."
-                  className="w-full bg-surface text-text-primary rounded-lg px-4 py-3 pr-12 resize-none focus:outline-none focus:ring-1 focus:ring-primary border border-border disabled:opacity-50"
-                  rows={1}
-                  disabled={isStreaming}
-                />
-                <button
-                  onClick={handleSend}
-                  disabled={!input.trim() || isStreaming}
-                  className="absolute right-2 bottom-2 p-2 text-text-secondary hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  title="Send message"
-                >
-                  <ArrowUp size={20} strokeWidth={1.5} />
-                </button>
-              </div>
-
+            <div className="shadow-2xl rounded-2xl overflow-hidden border border-border backdrop-blur-2xl flex flex-col transition-all focus-within:border-borderFocus" style={{ backgroundColor: 'color-mix(in srgb, var(--surface) 85%, transparent)' }}>
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Message Manong..."
+                className="w-full bg-transparent text-text-primary px-4 pt-4 pb-2 resize-none focus:outline-none disabled:opacity-50 text-[14px] leading-relaxed max-h-60"
+                rows={Math.min(10, input.split('\n').length || 1)}
+                style={{ minHeight: '56px' }}
+                disabled={isStreaming}
+              />
+              
               {/* Bottom toolbar */}
-              <div className="flex items-center justify-between pt-2 mt-1">
+              <div className="flex items-center justify-between px-3 pb-3 pt-1">
                 {/* Left buttons */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1">
                   <button
-                    className="text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1.5 text-xs font-mono group"
+                    className="p-1.5 text-text-secondary hover:text-text-primary hover:bg-hover rounded-md transition-colors flex items-center justify-center group"
                     title="Add Context"
                   >
-                    <PlusCircle size={16} className="group-hover:scale-110 transition-transform" strokeWidth={1.5} />
-                    <span>Context</span>
+                    <PlusCircle size={16} strokeWidth={1.5} />
                   </button>
                   <button
-                    className="text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1.5 text-xs font-mono group"
+                    className="p-1.5 text-text-secondary hover:text-text-primary hover:bg-hover rounded-md transition-colors flex items-center justify-center group"
                     title="Upload Image"
                   >
-                    <Image size={16} className="group-hover:scale-110 transition-transform" strokeWidth={1.5} />
+                    <Image size={16} strokeWidth={1.5} />
                   </button>
                   <button
-                    className="text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1.5 text-xs font-mono group"
+                    className="p-1.5 text-text-secondary hover:text-text-primary hover:bg-hover rounded-md transition-colors flex items-center justify-center group"
                     title="Terminal Command"
                   >
-                    <Terminal size={16} className="group-hover:scale-110 transition-transform" strokeWidth={1.5} />
+                    <Terminal size={16} strokeWidth={1.5} />
                   </button>
                 </div>
 
-                {/* Right: hint */}
-                <span className="text-[10px] text-text-secondary font-mono">
-                  CTRL + ENTER
-                </span>
+                {/* Right buttons */}
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-text-secondary font-mono mr-1 hidden sm:inline-block">
+                    CTRL + ENTER
+                  </span>
+                  <button
+                    onClick={handleSend}
+                    disabled={!input.trim() || isStreaming}
+                    className="p-1.5 bg-text-primary text-background rounded-lg hover:opacity-90 disabled:opacity-30 disabled:bg-surface-elevated disabled:text-text-secondary transition-all"
+                    title="Send message"
+                  >
+                    <ArrowUp size={16} strokeWidth={2} />
+                  </button>
+                </div>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>

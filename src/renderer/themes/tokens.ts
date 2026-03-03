@@ -28,35 +28,35 @@ export interface ThemeTokens {
 }
 
 export const lightTokens: ThemeTokens = {
-  background: '#FFFFFF',
-  surface: '#F9FAFB',
-  surfaceElevated: '#F3F4F6',
-  textPrimary: '#1F2937',
-  textSecondary: '#6B7280',
-  border: '#E5E7EB',
-  borderFocus: '#EA580C',
-  hover: '#F3F4F6',
-  active: '#E5E7EB',
-  codeBackground: '#F3F4F6',
-  codeBorder: '#E5E7EB',
-  scrollbarThumb: '#D1D5DB',
-  scrollbarThumbHover: '#9CA3AF',
+  background: '#FAFAFA',
+  surface: '#FFFFFF',
+  surfaceElevated: '#F4F4F5',
+  textPrimary: '#09090B',
+  textSecondary: '#71717A',
+  border: '#E4E4E7',
+  borderFocus: '#09090B',
+  hover: '#F4F4F5',
+  active: '#E4E4E7',
+  codeBackground: '#F4F4F5',
+  codeBorder: '#E4E4E7',
+  scrollbarThumb: '#D4D4D8',
+  scrollbarThumbHover: '#A1A1AA',
 };
 
 export const darkTokens: ThemeTokens = {
-  background: '#0D0D0D',
-  surface: '#161616',
-  surfaceElevated: '#1E1E1E',
-  textPrimary: '#E5E5E5',
-  textSecondary: '#A3A3A3',
-  border: '#262626',
-  borderFocus: '#EA580C',
-  hover: '#1E1E1E',
-  active: '#262626',
-  codeBackground: '#1E1E1E',
-  codeBorder: '#262626',
-  scrollbarThumb: '#404040',
-  scrollbarThumbHover: '#525252',
+  background: '#09090B', // Zinc 950
+  surface: '#18181B',    // Zinc 900
+  surfaceElevated: '#27272A', // Zinc 800
+  textPrimary: '#FAFAFA', // Zinc 50
+  textSecondary: '#A1A1AA', // Zinc 400
+  border: '#27272A',     // Zinc 800
+  borderFocus: '#FAFAFA', // Zinc 50 (white for focus)
+  hover: '#27272A',      // Zinc 800
+  active: '#3F3F46',     // Zinc 700
+  codeBackground: '#000000', // Pure black for code
+  codeBorder: '#27272A', // Zinc 800
+  scrollbarThumb: '#3F3F46',
+  scrollbarThumbHover: '#52525B',
 };
 
 // Convert camelCase to kebab-case for CSS variable names

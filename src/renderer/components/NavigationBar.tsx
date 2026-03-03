@@ -10,21 +10,18 @@ interface NavigationBarProps {
 
 export const NavigationBar: React.FC<NavigationBarProps> = ({ activeView, onViewChange }) => {
   return (
-    <nav className="w-12 bg-surface-elevated border-r border-border flex flex-col items-center py-3 shrink-0">
+    <nav className="w-12 bg-surface border-r border-border flex flex-col items-center py-4 shrink-0">
       {/* Chat */}
       <button
         onClick={() => onViewChange('chat')}
-        className={`w-8 h-8 mb-3 flex items-center justify-center relative group rounded-md transition-colors ${
+        className={`w-9 h-9 mb-2 flex items-center justify-center relative group rounded-lg transition-all ${
           activeView === 'chat'
-            ? 'text-primary bg-transparent hover:bg-hover'
-            : 'text-text-secondary hover:text-text-primary hover:bg-hover'
+            ? 'text-text-primary bg-surface-elevated shadow-sm border border-border'
+            : 'text-text-secondary hover:text-text-primary hover:bg-hover border border-transparent'
         }`}
         title="Chat"
       >
-        <MessageSquare size={20} strokeWidth={1.5} />
-        {activeView === 'chat' && (
-          <div className="absolute left-0 top-2 bottom-2 w-0.5 bg-primary rounded-r-full" />
-        )}
+        <MessageSquare size={18} strokeWidth={1.5} />
       </button>
 
       {/* Spacer */}
@@ -33,33 +30,27 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({ activeView, onView
       {/* MCP Servers */}
       <button
         onClick={() => onViewChange('mcp')}
-        className={`w-8 h-8 mb-3 flex items-center justify-center relative group rounded-md transition-colors ${
+        className={`w-9 h-9 mb-2 flex items-center justify-center relative group rounded-lg transition-all ${
           activeView === 'mcp'
-            ? 'text-primary bg-transparent hover:bg-hover'
-            : 'text-text-secondary hover:text-text-primary hover:bg-hover'
+            ? 'text-text-primary bg-surface-elevated shadow-sm border border-border'
+            : 'text-text-secondary hover:text-text-primary hover:bg-hover border border-transparent'
         }`}
         title="MCP Servers"
       >
-        <Server size={20} strokeWidth={1.5} />
-        {activeView === 'mcp' && (
-          <div className="absolute left-0 top-2 bottom-2 w-0.5 bg-primary rounded-r-full" />
-        )}
+        <Server size={18} strokeWidth={1.5} />
       </button>
 
       {/* Settings */}
       <button
         onClick={() => onViewChange('settings')}
-        className={`w-8 h-8 flex items-center justify-center relative group rounded-md transition-colors ${
+        className={`w-9 h-9 flex items-center justify-center relative group rounded-lg transition-all ${
           activeView === 'settings'
-            ? 'text-primary bg-transparent hover:bg-hover'
-            : 'text-text-secondary hover:text-text-primary hover:bg-hover'
+            ? 'text-text-primary bg-surface-elevated shadow-sm border border-border'
+            : 'text-text-secondary hover:text-text-primary hover:bg-hover border border-transparent'
         }`}
         title="Settings"
       >
-        <Settings size={20} strokeWidth={1.5} />
-        {activeView === 'settings' && (
-          <div className="absolute left-0 top-2 bottom-2 w-0.5 bg-primary rounded-r-full" />
-        )}
+        <Settings size={18} strokeWidth={1.5} />
       </button>
     </nav>
   );

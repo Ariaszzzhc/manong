@@ -3,8 +3,6 @@ import {
   ChevronRight,
   ChevronDown,
   Wrench,
-  CheckCircle,
-  AlertCircle,
   FileText,
   FileEdit,
   FolderOpen,
@@ -126,60 +124,60 @@ export const ToolPartView: React.FC<ToolPartViewProps> = ({ toolCall, toolResult
   const isPending = !toolResult;
 
   return (
-    <div
-      className={`my-1 border rounded overflow-hidden ${
-        isError ? 'border-red-800/50' : 'border-border'
-      }`}
-    >
+    <div className={`mb-3 group relative`}>
       <div
-        className={`px-3 py-1.5 text-sm flex items-center gap-2 cursor-pointer transition-colors ${
-          isError
-            ? 'bg-red-900/20 hover:bg-red-900/30'
-            : 'bg-surface-elevated hover:bg-hover'
-        }`}
+        className="flex items-center gap-2 cursor-pointer transition-colors bg-transparent hover:bg-hover rounded px-2 py-1 -ml-2"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        {isExpanded ? (
-          <ChevronDown size={12} className="text-text-secondary" strokeWidth={1.5} />
-        ) : (
-          <ChevronRight size={12} className="text-text-secondary" strokeWidth={1.5} />
-        )}
-        <Icon size={12} className={isMCP ? 'text-primary' : 'text-text-secondary'} strokeWidth={1.5} />
-        <span className="font-mono text-xs text-text-primary">{summary}</span>
-        {isMCP && server && (
-          <span className="text-[10px] px-1.5 py-0.5 bg-primary/20 text-primary rounded font-mono">
-            MCP: {server}
-          </span>
-        )}
-        {/* Status indicator */}
-        {isPending ? (
-          <span className="ml-auto text-[10px] px-1.5 py-0.5 bg-yellow-500/20 text-yellow-500 rounded font-mono animate-pulse">
-            pending
-          </span>
-        ) : isError ? (
-          <AlertCircle size={12} className="ml-auto text-accent-red" strokeWidth={1.5} />
-        ) : (
-          <CheckCircle size={12} className="ml-auto text-accent-green" strokeWidth={1.5} />
-        )}
+        <div className="flex items-center justify-center w-5 h-5 rounded-md bg-surface border border-border shadow-sm">
+          <Icon size={11} className={isError ? 'text-red-400' : isPending ? 'text-yellow-400' : 'text-text-primary'} strokeWidth={2} />
+        </div>
+        
+        <div className="flex-1 min-w-0 flex items-center gap-2">
+          <span className="font-mono text-[12px] text-text-primary opacity-90 truncate">{summary}</span>
+          {isMCP && server && (
+            <span className="text-[9px] px-1 py-0.5 bg-surface-elevated border border-border text-text-secondary rounded font-mono uppercase tracking-wider">
+              {server}
+            </span>
+          )}
+        </div>
+        
+        {/* Toggle icon */}
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+          {isExpanded ? (
+            <ChevronDown size={12} className="text-text-secondary" strokeWidth={2} />
+          ) : (
+            <ChevronRight size={12} className="text-text-secondary" strokeWidth={2} />
+          )}
+        </div>
       </div>
+
       {isExpanded && (
-        <div className="bg-surface-elevated border-t border-border">
-          {/* Arguments section */}
-          <div className="px-3 py-2 border-b border-border/50">
-            <div className="text-[10px] uppercase text-text-secondary mb-1 font-medium">Arguments</div>
-            <pre className="text-[11px] text-text-secondary overflow-x-auto font-mono">
-              {JSON.stringify(toolCall.args, null, 2)}
-            </pre>
+        <div className="mt-2 text-[11px] font-mono bg-code-bg border border-code-border rounded-lg p-3 space-y-3 shadow-sm">
+          {/* Arguments */}
+          <div className="flex gap-2">
+            <span className="text-blue-400 shrink-0">$</span>
+            <div className="overflow-x-auto whitespace-pre-wrap break-all">
+              {Object.entries(toolCall.args).map(([k, v]) => (
+                <span key={k} className="mr-2">
+                  <span className="text-pink-400">--{k}</span>=
+                  <span className="text-green-300">
+                    {typeof v === 'string' ? `"${v}"` : JSON.stringify(v)}
+                  </span>
+                </span>
+              ))}
+            </div>
           </div>
-          {/* Result section */}
+          
+          {/* Result */}
           {toolResult && (
-            <div className="px-3 py-2">
-              <div className="text-[10px] uppercase text-text-secondary mb-1 font-medium">Result</div>
-              <pre className="text-[11px] text-text-secondary overflow-x-auto max-h-40 font-mono">
+            <div className="flex gap-2 pt-2 border-t border-code-border/50">
+              <span className="text-text-secondary shrink-0">{'>'}</span>
+              <div className={`overflow-x-auto whitespace-pre-wrap break-all max-h-60 overflow-y-auto w-full ${isError ? 'text-red-400' : 'text-text-secondary'}`}>
                 {typeof toolResult.result === 'string'
                   ? toolResult.result
                   : JSON.stringify(toolResult.result, null, 2)}
-              </pre>
+              </div>
             </div>
           )}
         </div>

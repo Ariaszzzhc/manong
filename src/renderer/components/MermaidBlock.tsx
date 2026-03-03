@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import mermaid from 'mermaid';
-
-mermaid.initialize({
-  startOnLoad: false,
-  theme: 'dark',
-  securityLevel: 'loose',
-  fontFamily: 'JetBrains Mono, ui-monospace, monospace',
-  suppressErrorRendering: true,
-});
+import { useAppStore } from '../stores/app';
 
 interface MermaidBlockProps {
   code: string;
@@ -17,8 +10,18 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ code }) => {
   const [svg, setSvg] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const appTheme = useAppStore((s) => s.config?.theme) ?? 'dark';
+  const mermaidTheme = appTheme === 'light' ? 'default' : 'dark';
 
   useEffect(() => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: mermaidTheme,
+      securityLevel: 'loose',
+      fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+      suppressErrorRendering: true,
+    });
+
     setIsLoading(true);
     setError(null);
 
@@ -45,7 +48,7 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ code }) => {
     };
 
     renderDiagram();
-  }, [code]);
+  }, [code, mermaidTheme]);
 
   if (isLoading) {
     return (

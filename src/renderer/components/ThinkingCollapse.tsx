@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronRight, Loader2, BrainCircuit } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -26,24 +26,26 @@ export const ThinkingCollapse: React.FC<ThinkingCollapseProps> = ({
   }
 
   return (
-    <div className="thinking-collapse mb-3">
+    <div className="mb-4">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
+        className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors"
       >
+        {isStreaming ? (
+          <Loader2 size={13} className="text-text-secondary animate-spin" strokeWidth={2} />
+        ) : (
+          <BrainCircuit size={13} strokeWidth={2} className={isOpen ? "text-text-primary" : "text-text-secondary"} />
+        )}
+        <span className="text-[12px] font-medium tracking-wide">Thinking Process</span>
         <ChevronRight
           size={12}
-          className={`transition-transform ${isOpen ? 'rotate-90' : ''}`}
-          strokeWidth={1.5}
+          className={`transition-transform opacity-50 ${isOpen ? 'rotate-90' : ''}`}
+          strokeWidth={2}
         />
-        {isStreaming && (
-          <Loader2 size={12} className="text-primary animate-spin" strokeWidth={1.5} />
-        )}
-        <span className="font-mono text-xs">Thinking</span>
       </button>
       {isOpen && (
-        <div className="mt-2 pl-4 text-sm text-text-secondary italic border-l-2 border-primary/30">
-          <div className="prose prose-invert prose-sm max-w-none">
+        <div className="mt-2.5 ml-[6px] pl-4 text-sm text-text-secondary italic border-l-2 border-border">
+          <div className="prose prose-invert prose-sm max-w-none text-[13px] leading-relaxed opacity-80">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {text}
             </ReactMarkdown>
