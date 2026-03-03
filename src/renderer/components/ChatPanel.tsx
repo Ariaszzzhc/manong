@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { PlusCircle, Image, Terminal, ArrowUp, Square } from 'lucide-react';
+import { Image, ArrowUp, Square } from 'lucide-react';
 import { useAppStore } from '../stores/app';
 import { MessageItem } from './MessageItem';
 import { QuestionCard } from './QuestionCard';
@@ -333,12 +333,6 @@ export const ChatPanel: React.FC = () => {
                 {/* Left buttons */}
                 <div className="flex items-center gap-1">
                   <button
-                    className="p-1.5 text-text-secondary hover:text-text-primary hover:bg-hover rounded-md transition-colors flex items-center justify-center group"
-                    title="Add Context"
-                  >
-                    <PlusCircle size={16} strokeWidth={1.5} />
-                  </button>
-                  <button
                     onClick={() => fileInputRef.current?.click()}
                     className="p-1.5 text-text-secondary hover:text-text-primary hover:bg-hover rounded-md transition-colors flex items-center justify-center group"
                     title="Upload Image"
@@ -353,12 +347,6 @@ export const ChatPanel: React.FC = () => {
                     className="hidden"
                     onChange={handleFileSelect}
                   />
-                  <button
-                    className="p-1.5 text-text-secondary hover:text-text-primary hover:bg-hover rounded-md transition-colors flex items-center justify-center group"
-                    title="Terminal Command"
-                  >
-                    <Terminal size={16} strokeWidth={1.5} />
-                  </button>
                 </div>
 
                 {/* Right buttons */}
