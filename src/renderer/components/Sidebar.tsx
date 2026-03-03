@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus, Terminal, Code, ChevronRight, Circle, CircleDot, CheckCircle } from 'lucide-react';
 import { useAppStore } from '../stores/app';
+import { useTranslation, tf } from '../i18n';
 
 const formatTokens = (count: number): string => {
   if (count >= 1000000) {
@@ -14,6 +15,7 @@ const formatTokens = (count: number): string => {
 export const Sidebar: React.FC = () => {
   const { sessions, currentSessionId, setCurrentSession, deleteSession, todos } =
     useAppStore();
+  const t = useTranslation();
 
   const handleNewSession = async () => {
     const session = await window.manong.session.create();
@@ -45,12 +47,12 @@ export const Sidebar: React.FC = () => {
       {/* Header */}
       <div className="p-4 border-b border-border flex justify-between items-center">
         <span className="text-xs font-medium text-text-primary uppercase tracking-widest">
-          Sessions
+          {t['sidebar.sessions']}
         </span>
         <button
           onClick={handleNewSession}
           className="text-text-secondary hover:text-text-primary transition-colors"
-          title="New Session"
+          title={t['sidebar.newSession']}
         >
           <Plus size={16} strokeWidth={1.5} />
         </button>
@@ -62,7 +64,7 @@ export const Sidebar: React.FC = () => {
         {groupedSessions.current.length > 0 && (
           <div className="px-2 mb-4">
             <div className="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-2 px-2">
-              Current
+              {t['sidebar.current']}
             </div>
             {groupedSessions.current.map((session) => (
               <div
@@ -71,7 +73,7 @@ export const Sidebar: React.FC = () => {
               >
                 <Terminal size={14} className="text-text-primary opacity-80" strokeWidth={1.5} />
                 <span className="truncate font-medium flex-1">
-                  {session.title || 'New Chat'}
+                  {session.title || t['sidebar.newChat']}
                 </span>
               </div>
             ))}
@@ -82,7 +84,7 @@ export const Sidebar: React.FC = () => {
         {groupedSessions.history.length > 0 && (
           <div className="px-2">
             <div className="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-2 px-2">
-              History
+              {t['sidebar.history']}
             </div>
             {groupedSessions.history.map((session) => (
               <div
@@ -92,7 +94,7 @@ export const Sidebar: React.FC = () => {
               >
                 <Code size={14} className="opacity-60" strokeWidth={1.5} />
                 <span className="truncate flex-1">
-                  {session.title || 'New Chat'}
+                  {session.title || t['sidebar.newChat']}
                 </span>
                 <button
                   onClick={(e) => {
@@ -112,7 +114,7 @@ export const Sidebar: React.FC = () => {
         {/* Empty state */}
         {sessions.length === 0 && (
           <div className="p-4 text-center text-text-secondary text-xs">
-            No conversations yet
+            {t['sidebar.noConversations']}
           </div>
         )}
       </div>
@@ -121,7 +123,7 @@ export const Sidebar: React.FC = () => {
       {todos && todos.length > 0 && (
         <div className="px-3 py-2 border-t border-border">
           <div className="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-2">
-            Tasks
+            {t['sidebar.tasks']}
           </div>
           <div className="space-y-1 max-h-32 overflow-y-auto">
             {todos.map((todo, index) => (
@@ -157,7 +159,7 @@ export const Sidebar: React.FC = () => {
       {/* Context Usage Bar */}
       <div className="p-4 border-t border-border bg-surface">
         <div className="flex items-center justify-between text-[10px] text-text-secondary font-mono mb-1.5 uppercase tracking-wider">
-          <span>Context Usage</span>
+          <span>{t['sidebar.contextUsage']}</span>
           <span>{usagePercent.toFixed(0)}%</span>
         </div>
         <div className="w-full bg-surface-elevated h-[3px] rounded-full overflow-hidden">
@@ -168,7 +170,7 @@ export const Sidebar: React.FC = () => {
         </div>
         {totalTokens > 0 && (
           <div className="text-[10px] text-text-secondary mt-1.5 font-mono text-right opacity-70">
-            {formatTokens(totalTokens)} tokens
+            {tf(t['sidebar.tokens'], { count: formatTokens(totalTokens) })}
           </div>
         )}
       </div>

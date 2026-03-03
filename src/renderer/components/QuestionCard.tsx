@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { CheckCircle, Circle, CheckSquare, Square, ChevronRight, RotateCcw } from 'lucide-react';
 import type { QuestionInfo, QuestionAnswer } from '../../shared/types';
+import { useTranslation } from '../i18n';
 
 interface QuestionCardProps {
   questions: QuestionInfo[];
@@ -24,6 +25,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
     questions.map(() => '')
   );
   const [expandedCustom, setExpandedCustom] = useState<number | null>(null);
+  const t = useTranslation();
 
   const currentQuestion = isMultiQuestion
     ? questions[Math.min(currentTab, questions.length - 1)]
@@ -170,7 +172,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                 : 'text-text-secondary border-transparent hover:text-text-primary hover:bg-surface-hover'
             }`}
           >
-            Confirm
+            {t['question.confirm']}
           </button>
         </div>
       )}
@@ -180,14 +182,14 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
         {isConfirmPage ? (
           <div>
             <h3 className="text-sm font-medium text-text-primary mb-2">
-              Please confirm your choices:
+              {t['question.confirmChoices']}
             </h3>
             <div className="space-y-1.5">
               {questions.map((q, idx) => (
                 <div key={idx} className="flex items-start gap-2 text-xs">
                   <span className="text-text-secondary min-w-[60px]">{q.header}:</span>
                   <span className="text-text-primary font-medium">
-                    {answers[idx].length > 0 ? answers[idx].join(', ') : '(not answered)'}
+                    {answers[idx].length > 0 ? answers[idx].join(', ') : t['question.notAnswered']}
                   </span>
                 </div>
               ))}
@@ -200,7 +202,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             </h3>
             {currentQuestion.multiple && (
               <p className="text-xs text-text-secondary mt-0.5 mb-2">
-                (Multi-select: choose all that apply)
+                {t['question.multiSelect']}
               </p>
             )}
 
@@ -266,7 +268,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                   <span className="flex-shrink-0">
                     <Circle size={14} className="text-text-secondary" />
                   </span>
-                  <span className="text-xs text-text-secondary">Other...</span>
+                  <span className="text-xs text-text-secondary">{t['question.other']}</span>
                 </div>
               </button>
             </div>
@@ -283,7 +285,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                   onKeyDown={(e) =>
                     handleKeyDown(e, isMultiQuestion ? currentTab : 0)
                   }
-                  placeholder="Enter your answer..."
+                  placeholder={t['question.enterAnswer']}
                   className="flex-1 bg-background text-text-primary rounded px-2 py-1.5 text-xs border border-border focus:outline-none focus:ring-1 focus:ring-primary"
                   autoFocus
                 />
@@ -294,7 +296,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                     }
                     className="px-2 py-1.5 bg-primary text-white text-xs rounded hover:bg-primary-hover transition-colors whitespace-nowrap"
                   >
-                    Use
+                    {t['question.use']}
                   </button>
                 )}
               </div>
@@ -309,7 +311,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           onClick={onSkip}
           className="px-2 py-1 text-xs text-text-secondary hover:text-text-primary transition-colors"
         >
-          Skip
+          {t['question.skip']}
         </button>
 
         <div className="flex items-center gap-2">
@@ -319,7 +321,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
               className="px-2 py-1 text-xs text-text-secondary hover:text-text-primary border border-border rounded transition-colors flex items-center gap-1"
             >
               <RotateCcw size={10} />
-              Back
+              {t['question.back']}
             </button>
           )}
 
@@ -328,7 +330,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
               onClick={handleSubmit}
               className="px-3 py-1 bg-primary text-white text-xs rounded hover:bg-primary-hover transition-colors flex items-center gap-1"
             >
-              Confirm
+              {t['question.confirm']}
               <ChevronRight size={12} />
             </button>
           ) : isMultiQuestion ? (
@@ -337,13 +339,13 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
               disabled={!canProceed()}
               className="px-3 py-1 bg-primary text-white text-xs rounded hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
             >
-              {currentTab === questions.length - 1 ? 'Review' : 'Next'}
+              {currentTab === questions.length - 1 ? t['question.review'] : t['question.next']}
               <ChevronRight size={12} />
             </button>
           ) : (
             !questions[0].multiple && (
               <span className="text-[10px] text-text-secondary">
-                Click to select
+                {t['question.clickToSelect']}
               </span>
             )
           )}
@@ -354,7 +356,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
               disabled={!canProceed()}
               className="px-3 py-1 bg-primary text-white text-xs rounded hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
             >
-              Submit
+              {t['question.submit']}
               <ChevronRight size={12} />
             </button>
           )}

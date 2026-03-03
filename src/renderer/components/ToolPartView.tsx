@@ -13,6 +13,8 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import type { ToolCallPart, ToolResultPart } from '../../shared/types';
+import { useTranslation, tf } from '../i18n';
+import type { Translations } from '../i18n/locales/en';
 
 interface ToolPartViewProps {
   toolCall: ToolCallPart;
@@ -41,7 +43,8 @@ const formatToolName = (toolName: string): { display: string; server?: string } 
  */
 const generateActionSummary = (
   toolName: string,
-  args: Record<string, unknown>
+  args: Record<string, unknown>,
+  t: Translations,
 ): { summary: string; icon: LucideIcon } => {
   // Handle built-in tools
   switch (toolName) {
@@ -53,39 +56,38 @@ const generateActionSummary = (
 
       if (offset !== undefined && limit !== undefined) {
         const endLine = offset + limit - 1;
-        return { summary: `Read ${fileName} (L${offset}-${endLine})`, icon: FileText };
+        return { summary: tf(t['tool.readLines'], { name: fileName, start: offset, end: endLine }), icon: FileText };
       }
-      return { summary: `Read ${fileName}`, icon: FileText };
+      return { summary: tf(t['tool.read'], { name: fileName }), icon: FileText };
     }
 
     case 'write_file': {
       const filePath = String(args.file_path || '');
       const fileName = filePath.split('/').pop() || filePath;
-      return { summary: `Write ${fileName}`, icon: FileEdit };
+      return { summary: tf(t['tool.write'], { name: fileName }), icon: FileEdit };
     }
 
     case 'edit_file': {
       const filePath = String(args.file_path || '');
       const fileName = filePath.split('/').pop() || filePath;
-      return { summary: `Edit ${fileName}`, icon: FileEdit };
+      return { summary: tf(t['tool.edit'], { name: fileName }), icon: FileEdit };
     }
 
     case 'list_dir': {
       const path = String(args.path || '');
-      const dirName = path ? path.split('/').pop() || path : 'current directory';
-      return { summary: `List ${dirName}`, icon: FolderOpen };
+      const dirName = path ? path.split('/').pop() || path : t['tool.listCurrent'];
+      return { summary: tf(t['tool.list'], { name: dirName }), icon: FolderOpen };
     }
 
     case 'search_file': {
       const pattern = String(args.pattern || '');
-      return { summary: `Search "${pattern}"`, icon: Search };
+      return { summary: tf(t['tool.search'], { pattern }), icon: Search };
     }
 
     case 'run_shell': {
       const command = String(args.command || '');
-      // Truncate long commands
       const displayCommand = command.length > 40 ? command.slice(0, 40) + '...' : command;
-      return { summary: `Run: ${displayCommand}`, icon: Terminal };
+      return { summary: tf(t['tool.run'], { command: displayCommand }), icon: Terminal };
     }
 
     case 'ask': {
@@ -93,18 +95,17 @@ const generateActionSummary = (
       if (questions && questions.length > 0) {
         const header = questions[0].header || questions[0].question || 'user';
         const truncatedHeader = header.length > 30 ? header.slice(0, 30) + '...' : header;
-        return { summary: `Ask: ${truncatedHeader}`, icon: MessageCircle };
+        return { summary: tf(t['tool.ask'], { header: truncatedHeader }), icon: MessageCircle };
       }
-      return { summary: 'Ask user', icon: MessageCircle };
+      return { summary: t['tool.askUser'], icon: MessageCircle };
     }
 
     case 'skill': {
       const skillName = String(args.skill || args.name || '');
-      return { summary: `Skill: ${skillName}`, icon: Sparkles };
+      return { summary: tf(t['tool.skill'], { name: skillName }), icon: Sparkles };
     }
 
     default: {
-      // MCP tools or unknown tools
       if (isMCPTool(toolName)) {
         const { display } = formatToolName(toolName);
         return { summary: display, icon: Wrench };
@@ -116,8 +117,9 @@ const generateActionSummary = (
 
 export const ToolPartView: React.FC<ToolPartViewProps> = ({ toolCall, toolResult }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const t = useTranslation();
 
-  const { summary, icon: Icon } = generateActionSummary(toolCall.toolName, toolCall.args);
+  const { summary, icon: Icon } = generateActionSummary(toolCall.toolName, toolCall.args, t);
   const isMCP = isMCPTool(toolCall.toolName);
   const { server } = formatToolName(toolCall.toolName);
   const isError = toolResult?.isError;

@@ -1,9 +1,11 @@
 import React from 'react';
 import { User, Bot } from 'lucide-react';
+import { useTranslation } from '../i18n';
 
 // TeamPanel component - currently disabled
 // This component is preserved for future team/subagent functionality
 export const TeamPanel: React.FC = () => {
+  const t = useTranslation();
   return (
     <div className="p-2 space-y-2">
       <div className="space-y-1">
@@ -14,17 +16,17 @@ export const TeamPanel: React.FC = () => {
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-1.5">
               <User size={12} className="text-primary" />
-              <span className="font-medium">Team Lead</span>
+              <span className="font-medium">{t['team.teamLead']}</span>
             </div>
           </div>
           <p className="text-[10px] text-text-secondary truncate pl-4">
-            Main Agent (You)
+            {t['team.mainAgent']}
           </p>
         </button>
 
         {/* Empty state */}
         <div className="py-2 text-center text-text-secondary/50 text-[10px]">
-          Team feature is currently disabled
+          {t['team.disabled']}
         </div>
       </div>
     </div>

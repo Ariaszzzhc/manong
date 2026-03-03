@@ -7,6 +7,7 @@ import { SlashCommandMenu } from './SlashCommandMenu';
 import type { Message, Part, ImagePart, QuestionAnswer, Skill } from '../../shared/types';
 import { v4 as uuidv4 } from 'uuid';
 import { compressImage } from '../utils/imageCompressor';
+import { useTranslation } from '../i18n';
 
 const SLASH_COMMAND_PATTERN = /^\/(\w+)(?:\s+(.*))?$/;
 
@@ -28,6 +29,7 @@ export const ChatPanel: React.FC = () => {
   } = useAppStore();
 
   const [input, setInput] = useState('');
+  const t = useTranslation();
   const [attachments, setAttachments] = useState<ImagePart[]>([]);
   const [slashSelectedIndex, setSlashSelectedIndex] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -302,8 +304,8 @@ export const ChatPanel: React.FC = () => {
     return (
       <div className="flex-1 flex items-center justify-center bg-background text-text-secondary">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-text-primary mb-4">No Session</h2>
-          <p className="mb-4 text-sm">Select a session or create a new one</p>
+          <h2 className="text-2xl font-bold text-text-primary mb-4">{t['chat.noSession']}</h2>
+          <p className="mb-4 text-sm">{t['chat.noSessionDescription']}</p>
           <button
             onClick={async () => {
               const session = await window.manong.session.create();
@@ -311,7 +313,7 @@ export const ChatPanel: React.FC = () => {
             }}
             className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded transition-colors text-sm"
           >
-            New Session
+            {t['chat.newSession']}
           </button>
         </div>
       </div>
@@ -387,7 +389,7 @@ export const ChatPanel: React.FC = () => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Message Manong..."
+                placeholder={t['chat.placeholder']}
                 className="w-full bg-transparent text-text-primary px-4 pt-4 pb-2 resize-none focus:outline-none disabled:opacity-50 text-[14px] leading-relaxed max-h-60"
                 rows={Math.min(10, input.split('\n').length || 1)}
                 style={{ minHeight: '56px' }}
@@ -401,7 +403,7 @@ export const ChatPanel: React.FC = () => {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     className="p-1.5 text-text-secondary hover:text-text-primary hover:bg-hover rounded-md transition-colors flex items-center justify-center group"
-                    title="Upload Image"
+                    title={t['chat.uploadImage']}
                   >
                     <Image size={16} strokeWidth={1.5} />
                   </button>
@@ -421,12 +423,12 @@ export const ChatPanel: React.FC = () => {
                     <>
                       <span className="text-[10px] text-text-secondary font-mono mr-1 hidden sm:inline-flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-primary streaming-indicator" />
-                        Processing...
+                        {t['chat.processing']}
                       </span>
                       <button
                         onClick={handleStop}
                         className="p-1.5 bg-error text-white rounded-lg hover:bg-error/90 transition-all"
-                        title="Stop generation"
+                        title={t['chat.stopGeneration']}
                       >
                         <Square size={14} fill="currentColor" strokeWidth={0} />
                       </button>
@@ -434,13 +436,13 @@ export const ChatPanel: React.FC = () => {
                   ) : (
                     <>
                       <span className="text-[10px] text-text-secondary font-mono mr-1 hidden sm:inline-block">
-                        CTRL + ENTER
+                        {t['chat.ctrlEnter']}
                       </span>
                       <button
                         onClick={handleSend}
                         disabled={!input.trim() && attachments.length === 0}
                         className="p-1.5 bg-text-primary text-background rounded-lg hover:opacity-90 disabled:opacity-30 disabled:bg-surface-elevated disabled:text-text-secondary transition-all"
-                        title="Send message"
+                        title={t['chat.sendMessage']}
                       >
                         <ArrowUp size={16} strokeWidth={2} />
                       </button>

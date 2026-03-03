@@ -10,6 +10,7 @@ import { MCPConfigView } from './components/MCPConfigModal';
 import { useAppStore } from './stores/app';
 import { themes, applyTheme } from './themes';
 import type { ThemeName } from './themes';
+import { detectLocale } from './i18n';
 
 export const App: React.FC = () => {
   const { currentWorkspace, currentWorkspacePath, setWorkspace, config, setConfig, loadSkills, mcpStatuses, setMCPStatuses, setTodos, currentSessionId } = useAppStore();
@@ -26,7 +27,16 @@ export const App: React.FC = () => {
 
   // Initialization effect - runs once on mount
   useEffect(() => {
-    window.manong.config.get().then(setConfig);
+    window.manong.config.get().then((loadedConfig) => {
+      if (loadedConfig && loadedConfig.language === undefined) {
+        const detected = detectLocale();
+        const withLang = { ...loadedConfig, language: detected };
+        window.manong.config.set(withLang);
+        setConfig(withLang);
+      } else {
+        setConfig(loadedConfig);
+      }
+    });
 
     window.manong.workspace.getCurrent().then((data) => {
       if (data) {

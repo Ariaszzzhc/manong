@@ -1,5 +1,6 @@
 import React from 'react';
 import { MessageSquare, Settings, Server } from 'lucide-react';
+import { useTranslation } from '../i18n';
 
 export type ActiveView = 'chat' | 'mcp' | 'settings';
 
@@ -9,6 +10,7 @@ interface NavigationBarProps {
 }
 
 export const NavigationBar: React.FC<NavigationBarProps> = ({ activeView, onViewChange }) => {
+  const t = useTranslation();
   return (
     <nav className="w-12 bg-surface border-r border-border flex flex-col items-center py-4 shrink-0">
       {/* Chat */}
@@ -19,7 +21,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({ activeView, onView
             ? 'text-text-primary bg-surface-elevated shadow-sm border border-border'
             : 'text-text-secondary hover:text-text-primary hover:bg-hover border border-transparent'
         }`}
-        title="Chat"
+        title={t['nav.chat']}
       >
         <MessageSquare size={18} strokeWidth={1.5} />
       </button>
@@ -35,7 +37,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({ activeView, onView
             ? 'text-text-primary bg-surface-elevated shadow-sm border border-border'
             : 'text-text-secondary hover:text-text-primary hover:bg-hover border border-transparent'
         }`}
-        title="MCP Servers"
+        title={t['nav.mcpServers']}
       >
         <Server size={18} strokeWidth={1.5} />
       </button>
@@ -48,7 +50,7 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({ activeView, onView
             ? 'text-text-primary bg-surface-elevated shadow-sm border border-border'
             : 'text-text-secondary hover:text-text-primary hover:bg-hover border border-transparent'
         }`}
-        title="Settings"
+        title={t['nav.settings']}
       >
         <Settings size={18} strokeWidth={1.5} />
       </button>

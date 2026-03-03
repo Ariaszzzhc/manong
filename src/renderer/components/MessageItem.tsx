@@ -11,6 +11,7 @@ import { ThinkingCollapse } from './ThinkingCollapse';
 import { MermaidBlock } from './MermaidBlock';
 import 'highlight.js/styles/github-dark.css';
 import 'katex/dist/katex.min.css';
+import { useTranslation } from '../i18n';
 
 interface MessageItemProps {
   message: Message;
@@ -25,6 +26,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
 }) => {
   const parts = isStreaming && pendingParts ? pendingParts : message.parts;
   const isUser = message.role === 'user';
+  const t = useTranslation();
 
   // Separate thinking, tool, image, and text parts
   const thinkingParts = parts.filter((p) => p.type === 'thinking');
@@ -125,7 +127,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
           {isStreaming && !thinkingText && parts.every((p) => p.type !== 'text' || !p.text) && (
             <div className="flex items-center gap-2 text-text-secondary text-sm mt-2">
               <Loader2 size={14} className="animate-spin text-text-secondary" />
-              <span className="text-[13px]">Thinking...</span>
+              <span className="text-[13px]">{t['message.thinking']}</span>
             </div>
           )}
         </div>
@@ -143,6 +145,7 @@ interface CodeBlockProps {
 
 export const CodeBlock: React.FC<CodeBlockProps> = ({ filename, code, language }) => {
   const [copied, setCopied] = useState(false);
+  const t = useTranslation();
 
   const highlightedCode = useMemo(() => {
     if (language && hljs.getLanguage(language)) {
@@ -186,7 +189,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ filename, code, language }
           }`}
         >
           {copied ? <Check size={13} strokeWidth={2} /> : <Copy size={13} strokeWidth={1.5} />}
-          {copied ? 'Copied' : 'Copy'}
+          {copied ? t['message.copied'] : t['message.copy']}
         </button>
       </div>
 

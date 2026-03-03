@@ -1,0 +1,177 @@
+export const en = {
+  // Chat
+  'chat.noSession': 'No Session',
+  'chat.noSessionDescription': 'Select a session or create a new one',
+  'chat.newSession': 'New Session',
+  'chat.placeholder': 'Message Manong...',
+  'chat.processing': 'Processing...',
+  'chat.stopGeneration': 'Stop generation',
+  'chat.sendMessage': 'Send message',
+  'chat.uploadImage': 'Upload Image',
+  'chat.ctrlEnter': 'CTRL + ENTER',
+
+  // Sidebar
+  'sidebar.sessions': 'Sessions',
+  'sidebar.newSession': 'New Session',
+  'sidebar.current': 'Current',
+  'sidebar.history': 'History',
+  'sidebar.newChat': 'New Chat',
+  'sidebar.noConversations': 'No conversations yet',
+  'sidebar.tasks': 'Tasks',
+  'sidebar.contextUsage': 'Context Usage',
+  'sidebar.tokens': '{count} tokens',
+
+  // Welcome
+  'welcome.title': 'Manong',
+  'welcome.subtitle': 'AI Coding Assistant',
+  'welcome.openFolder': 'Open Folder',
+  'welcome.recent': 'Recent',
+
+  // Navigation
+  'nav.chat': 'Chat',
+  'nav.mcpServers': 'MCP Servers',
+  'nav.settings': 'Settings',
+
+  // TitleBar
+  'titlebar.agent': 'AGENT',
+  'titlebar.switchWorkspace': 'Switch workspace',
+  'titlebar.openFolder': 'Open Folder',
+  'titlebar.minimize': 'Minimize',
+  'titlebar.maximize': 'Maximize',
+  'titlebar.close': 'Close',
+
+  // Settings
+  'settings.title': 'Settings',
+  'settings.apiKey': 'API Key',
+  'settings.baseURL': 'Base URL',
+  'settings.model': 'Model',
+  'settings.enableThinking': 'Enable Thinking (for models like GLM-4.7)',
+  'settings.theme': 'Theme',
+  'settings.themeDark': 'Dark',
+  'settings.themeLight': 'Light',
+  'settings.language': 'Language',
+  'settings.save': 'Save',
+  'settings.saved': 'Saved!',
+  'settings.cancel': 'Cancel',
+
+  // MCP Config
+  'mcp.config.title': 'MCP Server Configuration',
+  'mcp.config.allServers': 'All Servers',
+  'mcp.config.global': 'Global',
+  'mcp.config.project': 'Project',
+  'mcp.config.noWorkspace': '(no workspace)',
+  'mcp.config.serversConfigured': '{count} server(s) configured',
+  'mcp.config.noProjectConfig': ' (no project config)',
+  'mcp.config.addServer': 'Add Server',
+  'mcp.config.editServer': 'Edit Server',
+  'mcp.config.addNewServer': 'Add New Server',
+  'mcp.config.serverName': 'Server Name',
+  'mcp.config.transport': 'Transport',
+  'mcp.config.stdio': 'Stdio',
+  'mcp.config.httpSse': 'HTTP/SSE',
+  'mcp.config.command': 'Command',
+  'mcp.config.arguments': 'Arguments',
+  'mcp.config.envVars': 'Environment Variables (JSON)',
+  'mcp.config.url': 'URL',
+  'mcp.config.headers': 'Headers (JSON)',
+  'mcp.config.enableServer': 'Enable this server (uncheck to disable inherited global server)',
+  'mcp.config.save': 'Save',
+  'mcp.config.saving': 'Saving...',
+  'mcp.config.cancel': 'Cancel',
+  'mcp.config.close': 'Close',
+  'mcp.config.edit': 'Edit',
+  'mcp.config.connect': 'Connect',
+  'mcp.config.disconnect': 'Disconnect',
+  'mcp.config.disabled': 'disabled',
+  'mcp.config.toolsAvailable': '{count} tools available',
+  'mcp.config.projectConfig': 'Project config',
+  'mcp.config.globalConfig': 'Global config',
+  'mcp.config.enableServerTitle': 'Enable server',
+  'mcp.config.disableServerTitle': 'Disable server',
+  'mcp.config.urlRequired': 'URL is required for HTTP transport',
+  'mcp.config.commandRequired': 'Command is required for Stdio transport',
+  'mcp.config.nameRequired': 'Server name is required',
+  'mcp.config.saveFailed': 'Failed to save configuration',
+
+  // MCP Status
+  'mcp.status.title': 'MCP Servers',
+  'mcp.status.configureMcp': 'Configure MCP',
+  'mcp.status.noServers': 'No MCP servers configured',
+  'mcp.status.tools': '{count} tools',
+  'mcp.status.connect': 'Connect',
+  'mcp.status.projectConfig': 'Project config',
+  'mcp.status.globalConfig': 'Global config',
+
+  // Question
+  'question.confirmChoices': 'Please confirm your choices:',
+  'question.notAnswered': '(not answered)',
+  'question.multiSelect': '(Multi-select: choose all that apply)',
+  'question.other': 'Other...',
+  'question.enterAnswer': 'Enter your answer...',
+  'question.use': 'Use',
+  'question.skip': 'Skip',
+  'question.back': 'Back',
+  'question.confirm': 'Confirm',
+  'question.review': 'Review',
+  'question.next': 'Next',
+  'question.clickToSelect': 'Click to select',
+  'question.submit': 'Submit',
+
+  // Message
+  'message.copy': 'Copy',
+  'message.copied': 'Copied',
+  'message.thinking': 'Thinking...',
+
+  // Thinking
+  'thinking.process': 'Thinking Process',
+
+  // Tool
+  'tool.read': 'Read {name}',
+  'tool.readLines': 'Read {name} (L{start}-{end})',
+  'tool.write': 'Write {name}',
+  'tool.edit': 'Edit {name}',
+  'tool.list': 'List {name}',
+  'tool.listCurrent': 'current directory',
+  'tool.search': 'Search "{pattern}"',
+  'tool.run': 'Run: {command}',
+  'tool.ask': 'Ask: {header}',
+  'tool.askUser': 'Ask user',
+  'tool.skill': 'Skill: {name}',
+  'tool.toolsUsedSingular': '{count} Tool Used',
+  'tool.toolsUsedPlural': '{count} Tools Used',
+
+  // Info Panel
+  'info.sessionInfo': 'Session Info',
+  'info.statistics': 'Statistics',
+  'info.messages': 'Messages',
+  'info.toolCalls': 'Tool Calls',
+  'info.cumulativeUsage': 'Cumulative Usage',
+  'info.input': 'Input',
+  'info.output': 'Output',
+  'info.total': 'Total',
+  'info.currentContext': 'Current Context',
+  'info.tokens': 'Tokens',
+  'info.status': 'Status',
+  'info.processing': 'Processing...',
+  'info.idle': 'Idle',
+  'info.recentChanges': 'Recent Changes',
+  'info.noChanges': 'No changes yet',
+
+  // Mermaid
+  'mermaid.loading': 'Loading diagram...',
+  'mermaid.syntaxError': 'Mermaid Syntax Error',
+  'mermaid.viewSource': 'View source code',
+  'mermaid.emptyDiagram': 'Empty diagram code',
+
+  // Team
+  'team.teamLead': 'Team Lead',
+  'team.mainAgent': 'Main Agent (You)',
+  'team.disabled': 'Team feature is currently disabled',
+
+  // Language names
+  'lang.en': 'English',
+  'lang.zhCN': '简体中文',
+} as const;
+
+export type Translations = typeof en;
+export type TranslationKey = keyof Translations;

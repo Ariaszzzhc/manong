@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronRight, Loader2, BrainCircuit } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useTranslation } from '../i18n';
 
 interface ThinkingCollapseProps {
   text: string;
@@ -13,6 +14,7 @@ export const ThinkingCollapse: React.FC<ThinkingCollapseProps> = ({
   isStreaming,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const t = useTranslation();
 
   // Auto-expand when streaming starts with content
   useEffect(() => {
@@ -36,7 +38,7 @@ export const ThinkingCollapse: React.FC<ThinkingCollapseProps> = ({
         ) : (
           <BrainCircuit size={13} strokeWidth={2} className={isOpen ? "text-text-primary" : "text-text-secondary"} />
         )}
-        <span className="text-[12px] font-medium tracking-wide">Thinking Process</span>
+        <span className="text-[12px] font-medium tracking-wide">{t['thinking.process']}</span>
         <ChevronRight
           size={12}
           className={`transition-transform opacity-50 ${isOpen ? 'rotate-90' : ''}`}

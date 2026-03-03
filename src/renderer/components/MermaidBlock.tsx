@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import mermaid from 'mermaid';
 import { useAppStore } from '../stores/app';
+import { useTranslation } from '../i18n';
 
 interface MermaidBlockProps {
   code: string;
@@ -12,6 +13,7 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ code }) => {
   const [isLoading, setIsLoading] = useState(true);
   const appTheme = useAppStore((s) => s.config?.theme) ?? 'dark';
   const mermaidTheme = appTheme === 'light' ? 'default' : 'dark';
+  const t = useTranslation();
 
   useEffect(() => {
     mermaid.initialize({
@@ -27,7 +29,7 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ code }) => {
 
     const trimmedCode = code.trim();
     if (!trimmedCode) {
-      setError('Empty diagram code');
+      setError(t['mermaid.emptyDiagram']);
       setIsLoading(false);
       return;
     }
@@ -53,7 +55,7 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ code }) => {
   if (isLoading) {
     return (
       <div className="my-4 p-4 bg-surface rounded-lg border border-border text-text-secondary text-sm flex items-center gap-2">
-        <span className="animate-pulse">Loading diagram...</span>
+        <span className="animate-pulse">{t['mermaid.loading']}</span>
       </div>
     );
   }
@@ -61,10 +63,10 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ code }) => {
   if (error) {
     return (
       <div className="my-4 p-4 bg-error/10 border border-error/50 rounded-lg text-error text-sm">
-        <div className="font-semibold mb-1">Mermaid Syntax Error</div>
+        <div className="font-semibold mb-1">{t['mermaid.syntaxError']}</div>
         <pre className="text-xs overflow-x-auto whitespace-pre-wrap">{error}</pre>
         <details className="mt-2">
-          <summary className="cursor-pointer text-xs text-error/80 hover:text-error">View source code</summary>
+          <summary className="cursor-pointer text-xs text-error/80 hover:text-error">{t['mermaid.viewSource']}</summary>
           <pre className="mt-2 p-2 bg-surface rounded text-xs overflow-x-auto">{code}</pre>
         </details>
       </div>

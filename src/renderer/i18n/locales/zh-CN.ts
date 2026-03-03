@@ -1,0 +1,176 @@
+import type { Translations } from './en';
+
+export const zhCN: Translations = {
+  // Chat
+  'chat.noSession': '没有会话',
+  'chat.noSessionDescription': '选择一个会话或创建新会话',
+  'chat.newSession': '新会话',
+  'chat.placeholder': '输入消息...',
+  'chat.processing': '处理中...',
+  'chat.stopGeneration': '停止生成',
+  'chat.sendMessage': '发送消息',
+  'chat.uploadImage': '上传图片',
+  'chat.ctrlEnter': 'CTRL + ENTER',
+
+  // Sidebar
+  'sidebar.sessions': '会话',
+  'sidebar.newSession': '新会话',
+  'sidebar.current': '当前',
+  'sidebar.history': '历史',
+  'sidebar.newChat': '新对话',
+  'sidebar.noConversations': '暂无对话',
+  'sidebar.tasks': '任务',
+  'sidebar.contextUsage': '上下文使用',
+  'sidebar.tokens': '{count} 令牌',
+
+  // Welcome
+  'welcome.title': 'Manong',
+  'welcome.subtitle': 'AI 编程助手',
+  'welcome.openFolder': '打开文件夹',
+  'welcome.recent': '最近',
+
+  // Navigation
+  'nav.chat': '对话',
+  'nav.mcpServers': 'MCP 服务器',
+  'nav.settings': '设置',
+
+  // TitleBar
+  'titlebar.agent': 'AGENT',
+  'titlebar.switchWorkspace': '切换工作区',
+  'titlebar.openFolder': '打开文件夹',
+  'titlebar.minimize': '最小化',
+  'titlebar.maximize': '最大化',
+  'titlebar.close': '关闭',
+
+  // Settings
+  'settings.title': '设置',
+  'settings.apiKey': 'API 密钥',
+  'settings.baseURL': '基础 URL',
+  'settings.model': '模型',
+  'settings.enableThinking': '启用思考（适用于 GLM-4.7 等模型）',
+  'settings.theme': '主题',
+  'settings.themeDark': '深色',
+  'settings.themeLight': '浅色',
+  'settings.language': '语言',
+  'settings.save': '保存',
+  'settings.saved': '已保存！',
+  'settings.cancel': '取消',
+
+  // MCP Config
+  'mcp.config.title': 'MCP 服务器配置',
+  'mcp.config.allServers': '所有服务器',
+  'mcp.config.global': '全局',
+  'mcp.config.project': '项目',
+  'mcp.config.noWorkspace': '（无工作区）',
+  'mcp.config.serversConfigured': '{count} 个服务器已配置',
+  'mcp.config.noProjectConfig': '（无项目配置）',
+  'mcp.config.addServer': '添加服务器',
+  'mcp.config.editServer': '编辑服务器',
+  'mcp.config.addNewServer': '添加新服务器',
+  'mcp.config.serverName': '服务器名称',
+  'mcp.config.transport': '传输方式',
+  'mcp.config.stdio': 'Stdio',
+  'mcp.config.httpSse': 'HTTP/SSE',
+  'mcp.config.command': '命令',
+  'mcp.config.arguments': '参数',
+  'mcp.config.envVars': '环境变量（JSON）',
+  'mcp.config.url': 'URL',
+  'mcp.config.headers': '请求头（JSON）',
+  'mcp.config.enableServer': '启用此服务器（取消勾选以禁用继承的全局服务器）',
+  'mcp.config.save': '保存',
+  'mcp.config.saving': '保存中...',
+  'mcp.config.cancel': '取消',
+  'mcp.config.close': '关闭',
+  'mcp.config.edit': '编辑',
+  'mcp.config.connect': '连接',
+  'mcp.config.disconnect': '断开',
+  'mcp.config.disabled': '已禁用',
+  'mcp.config.toolsAvailable': '{count} 个工具可用',
+  'mcp.config.projectConfig': '项目配置',
+  'mcp.config.globalConfig': '全局配置',
+  'mcp.config.enableServerTitle': '启用服务器',
+  'mcp.config.disableServerTitle': '禁用服务器',
+  'mcp.config.urlRequired': 'HTTP 传输需要 URL',
+  'mcp.config.commandRequired': 'Stdio 传输需要命令',
+  'mcp.config.nameRequired': '需要服务器名称',
+  'mcp.config.saveFailed': '保存配置失败',
+
+  // MCP Status
+  'mcp.status.title': 'MCP 服务器',
+  'mcp.status.configureMcp': '配置 MCP',
+  'mcp.status.noServers': '未配置 MCP 服务器',
+  'mcp.status.tools': '{count} 个工具',
+  'mcp.status.connect': '连接',
+  'mcp.status.projectConfig': '项目配置',
+  'mcp.status.globalConfig': '全局配置',
+
+  // Question
+  'question.confirmChoices': '请确认您的选择：',
+  'question.notAnswered': '（未回答）',
+  'question.multiSelect': '（多选：选择所有适用项）',
+  'question.other': '其他...',
+  'question.enterAnswer': '输入您的答案...',
+  'question.use': '使用',
+  'question.skip': '跳过',
+  'question.back': '返回',
+  'question.confirm': '确认',
+  'question.review': '审查',
+  'question.next': '下一步',
+  'question.clickToSelect': '点击选择',
+  'question.submit': '提交',
+
+  // Message
+  'message.copy': '复制',
+  'message.copied': '已复制',
+  'message.thinking': '思考中...',
+
+  // Thinking
+  'thinking.process': '思考过程',
+
+  // Tool
+  'tool.read': '读取 {name}',
+  'tool.readLines': '读取 {name} (L{start}-{end})',
+  'tool.write': '写入 {name}',
+  'tool.edit': '编辑 {name}',
+  'tool.list': '列出 {name}',
+  'tool.listCurrent': '当前目录',
+  'tool.search': '搜索 "{pattern}"',
+  'tool.run': '运行: {command}',
+  'tool.ask': '询问: {header}',
+  'tool.askUser': '询问用户',
+  'tool.skill': '技能: {name}',
+  'tool.toolsUsedSingular': '{count} 个工具已使用',
+  'tool.toolsUsedPlural': '{count} 个工具已使用',
+
+  // Info Panel
+  'info.sessionInfo': '会话信息',
+  'info.statistics': '统计',
+  'info.messages': '消息',
+  'info.toolCalls': '工具调用',
+  'info.cumulativeUsage': '累计使用',
+  'info.input': '输入',
+  'info.output': '输出',
+  'info.total': '总计',
+  'info.currentContext': '当前上下文',
+  'info.tokens': '令牌',
+  'info.status': '状态',
+  'info.processing': '处理中...',
+  'info.idle': '空闲',
+  'info.recentChanges': '最近更改',
+  'info.noChanges': '暂无更改',
+
+  // Mermaid
+  'mermaid.loading': '加载图表中...',
+  'mermaid.syntaxError': 'Mermaid 语法错误',
+  'mermaid.viewSource': '查看源代码',
+  'mermaid.emptyDiagram': '空图表代码',
+
+  // Team
+  'team.teamLead': '团队负责人',
+  'team.mainAgent': '主代理（你）',
+  'team.disabled': '团队功能当前已禁用',
+
+  // Language names
+  'lang.en': 'English',
+  'lang.zhCN': '简体中文',
+};

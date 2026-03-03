@@ -1,11 +1,13 @@
 import React from 'react';
 import { FolderOpen, Minus, Square, X } from 'lucide-react';
 import { useAppStore } from '../stores/app';
+import { useTranslation } from '../i18n';
 
 const isMac = window.manong.platform === 'darwin';
 
 export const TitleBar: React.FC = () => {
   const { currentWorkspace, setWorkspace } = useAppStore();
+  const t = useTranslation();
 
   const handleSwitchWorkspace = async () => {
     const data = await window.manong.workspace.open();
@@ -24,14 +26,14 @@ export const TitleBar: React.FC = () => {
         {/* AGENT label + folder */}
         <div className="flex items-center text-xs gap-2">
           <span className="font-semibold tracking-tight text-text-primary">
-            AGENT
+            {t['titlebar.agent']}
           </span>
           <span className="text-text-secondary">/</span>
           {currentWorkspace ? (
             <button
               onClick={handleSwitchWorkspace}
               className="flex items-center gap-1.5 text-text-secondary hover:text-primary cursor-pointer transition-colors font-mono text-[11px]"
-              title="Switch workspace"
+              title={t['titlebar.switchWorkspace']}
             >
               <FolderOpen size={14} strokeWidth={1.5} />
               <span>{currentWorkspace.name}</span>
@@ -42,7 +44,7 @@ export const TitleBar: React.FC = () => {
               className="flex items-center gap-1.5 text-text-secondary hover:text-primary cursor-pointer transition-colors font-mono text-[11px]"
             >
               <FolderOpen size={14} strokeWidth={1.5} />
-              <span>Open Folder</span>
+              <span>{t['titlebar.openFolder']}</span>
             </button>
           )}
         </div>
@@ -56,21 +58,21 @@ export const TitleBar: React.FC = () => {
             <button
               onClick={() => window.manong.window.minimize()}
               className="w-8 h-8 flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-hover transition-colors"
-              title="Minimize"
+              title={t['titlebar.minimize']}
             >
               <Minus size={16} strokeWidth={1.5} />
             </button>
             <button
               onClick={() => window.manong.window.maximize()}
               className="w-8 h-8 flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-hover transition-colors"
-              title="Maximize"
+              title={t['titlebar.maximize']}
             >
               <Square size={14} strokeWidth={1.5} />
             </button>
             <button
               onClick={() => window.manong.window.close()}
               className="w-8 h-8 flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-error/20 transition-colors"
-              title="Close"
+              title={t['titlebar.close']}
             >
               <X size={16} strokeWidth={1.5} />
             </button>

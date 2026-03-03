@@ -136,6 +136,7 @@ export interface AppConfig {
   providers: ProviderConfig[];
   defaultProvider: string;
   theme: 'light' | 'dark';
+  language?: string;
 }
 
 export const DEFAULT_CONFIG: AppConfig = {

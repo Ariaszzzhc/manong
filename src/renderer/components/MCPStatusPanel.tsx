@@ -1,6 +1,7 @@
 import React from 'react';
 import { Server, Circle, RefreshCw, Settings, Globe, Folder } from 'lucide-react';
 import type { MCPServerStatus, MCPConnectionStatus } from '../../shared/mcp-types';
+import { useTranslation, tf } from '../i18n';
 
 interface MCPStatusPanelProps {
   statuses: MCPServerStatus[];
@@ -42,13 +43,14 @@ export const MCPStatusPanel: React.FC<MCPStatusPanelProps> = ({
   onOpenConfig,
 }) => {
   const connectedCount = statuses.filter((s) => s.status === 'connected').length;
+  const t = useTranslation();
 
   return (
     <div className="flex flex-col">
       <div className="p-3 border-b border-border flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Server size={14} className="text-text-secondary" strokeWidth={1.5} />
-          <span className="text-xs font-medium text-text-primary">MCP Servers</span>
+          <span className="text-xs font-medium text-text-primary">{t['mcp.status.title']}</span>
         </div>
         <div className="flex items-center gap-1">
           <span className="text-[10px] text-text-secondary font-mono">
@@ -57,7 +59,7 @@ export const MCPStatusPanel: React.FC<MCPStatusPanelProps> = ({
           <button
             onClick={onOpenConfig}
             className="p-1 text-text-secondary hover:text-text-primary hover:bg-hover rounded transition-colors"
-            title="Configure MCP"
+            title={t['mcp.status.configureMcp']}
           >
             <Settings size={12} strokeWidth={1.5} />
           </button>
@@ -67,7 +69,7 @@ export const MCPStatusPanel: React.FC<MCPStatusPanelProps> = ({
       <div className="max-h-40 overflow-y-auto">
         {statuses.length === 0 ? (
           <div className="p-3 text-center text-text-secondary text-xs">
-            No MCP servers configured
+            {t['mcp.status.noServers']}
           </div>
         ) : (
           <div className="py-1">
@@ -89,11 +91,11 @@ export const MCPStatusPanel: React.FC<MCPStatusPanelProps> = ({
                       {server.name}
                     </span>
                     {server.source === 'project' ? (
-                      <div title="Project config">
+                      <div title={t['mcp.status.projectConfig']}>
                         <Folder size={10} className="text-primary" />
                       </div>
                     ) : (
-                      <div title="Global config">
+                      <div title={t['mcp.status.globalConfig']}>
                         <Globe size={10} className="text-text-secondary" />
                       </div>
                     )}
@@ -106,14 +108,14 @@ export const MCPStatusPanel: React.FC<MCPStatusPanelProps> = ({
                 </div>
                 {server.status === 'connected' && (
                   <span className="text-[10px] text-text-secondary font-mono">
-                    {server.toolCount} tools
+                    {tf(t['mcp.status.tools'], { count: server.toolCount })}
                   </span>
                 )}
                 {server.status === 'disconnected' && (
                   <button
                     onClick={() => onConnect(server.name)}
                     className="p-1 text-text-secondary hover:text-primary transition-colors"
-                    title="Connect"
+                    title={t['mcp.status.connect']}
                   >
                     <RefreshCw size={12} strokeWidth={1.5} />
                   </button>

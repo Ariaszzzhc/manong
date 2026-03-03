@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Save, RefreshCw, Globe, Folder, ToggleLeft, ToggleRight } from 'lucide-react';
 import type { MCPConfig, MCPServerConfig, MCPServerStatus, LayeredMCPConfig } from '../../shared/mcp-types';
+import { useTranslation, tf } from '../i18n';
+
+import type { Translations } from '../i18n/locales/en';
 
 interface MCPConfigContentProps {
   statuses: MCPServerStatus[];
@@ -39,7 +42,7 @@ const emptyFormData: ServerFormData = {
 
 type TabType = 'merged' | 'global' | 'project';
 
-const useMCPConfig = (loadOnMount: boolean, currentWorkspacePath: string | null, onRefresh: () => void) => {
+const useMCPConfig = (loadOnMount: boolean, currentWorkspacePath: string | null, onRefresh: () => void, t: Translations) => {
   const [layeredConfig, setLayeredConfig] = useState<LayeredMCPConfig>({
     global: { mcpServers: {} },
     project: null,
@@ -158,18 +161,18 @@ const useMCPConfig = (loadOnMount: boolean, currentWorkspacePath: string | null,
     };
 
     if (formData.transport === 'http' && !formData.url) {
-      alert('URL is required for HTTP transport');
+      alert(t['mcp.config.urlRequired']);
       return;
     }
 
     if (formData.transport === 'stdio' && !formData.command) {
-      alert('Command is required for Stdio transport');
+      alert(t['mcp.config.commandRequired']);
       return;
     }
 
     const serverName = editingServer || formData.name;
     if (!serverName.trim()) {
-      alert('Server name is required');
+      alert(t['mcp.config.nameRequired']);
       return;
     }
 
@@ -208,7 +211,7 @@ const useMCPConfig = (loadOnMount: boolean, currentWorkspacePath: string | null,
       onRefresh();
     } catch (error) {
       console.error('Failed to save server:', error);
-      alert('Failed to save configuration');
+      alert(t['mcp.config.saveFailed']);
     }
     setSaving(false);
   };
@@ -234,6 +237,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
     getActiveConfig, resetForm, handleEditServer, handleDeleteServer, handleToggleServer,
     handleSaveServer, isServerDisabled,
   } = hook;
+  const t = useTranslation();
 
   const getStatusBadge = (name: string) => {
     const status = statuses.find((s) => s.name === name);
@@ -270,7 +274,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
               : 'text-text-secondary hover:text-text-primary'
           }`}
         >
-          All Servers
+          {t['mcp.config.allServers']}
         </button>
         <button
           onClick={() => { setActiveTab('global'); resetForm(); }}
@@ -281,7 +285,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
           }`}
         >
           <Globe size={14} />
-          Global
+          {t['mcp.config.global']}
         </button>
         <button
           onClick={() => { setActiveTab('project'); resetForm(); }}
@@ -293,8 +297,8 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
           } ${!hasProject ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           <Folder size={14} />
-          Project
-          {!hasProject && <span className="text-[10px]">(no workspace)</span>}
+          {t['mcp.config.project']}
+          {!hasProject && <span className="text-[10px]">{t['mcp.config.noWorkspace']}</span>}
         </button>
       </div>
 
@@ -302,8 +306,8 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-sm text-text-secondary">
-              {Object.keys(activeConfig.mcpServers).length} server(s) configured
-              {activeTab === 'project' && !layeredConfig.project && ' (no project config)'}
+              {tf(t['mcp.config.serversConfigured'], { count: Object.keys(activeConfig.mcpServers).length })}
+              {activeTab === 'project' && !layeredConfig.project && t['mcp.config.noProjectConfig']}
             </span>
             {!showAddForm && activeTab !== 'merged' && (
               <button
@@ -316,7 +320,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                 className="flex items-center gap-1 px-3 py-1.5 text-xs bg-primary hover:bg-primary-hover text-white rounded transition-colors disabled:opacity-50"
               >
                 <Plus size={14} strokeWidth={1.5} />
-                Add Server
+                {t['mcp.config.addServer']}
               </button>
             )}
           </div>
@@ -325,7 +329,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
             <div className="bg-surface-elevated rounded-lg p-4 border border-border">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-medium text-text-primary flex items-center gap-2">
-                  {editingServer ? 'Edit Server' : 'Add New Server'}
+                  {editingServer ? t['mcp.config.editServer'] : t['mcp.config.addNewServer']}
                   {editingScope === 'global' ? (
                     <Globe size={12} className="text-text-secondary" />
                   ) : (
@@ -344,7 +348,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs text-text-secondary mb-1">
-                      Server Name
+                      {t['mcp.config.serverName']}
                     </label>
                     <input
                       type="text"
@@ -359,7 +363,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                   </div>
                   <div>
                     <label className="block text-xs text-text-secondary mb-1">
-                      Transport
+                      {t['mcp.config.transport']}
                     </label>
                     <select
                       value={formData.transport}
@@ -371,8 +375,8 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                       }
                       className="w-full bg-surface text-text-primary rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary border border-border"
                     >
-                      <option value="stdio">Stdio</option>
-                      <option value="http">HTTP/SSE</option>
+                      <option value="stdio">{t['mcp.config.stdio']}</option>
+                      <option value="http">{t['mcp.config.httpSse']}</option>
                     </select>
                   </div>
                 </div>
@@ -382,7 +386,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs text-text-secondary mb-1">
-                          Command
+                          {t['mcp.config.command']}
                         </label>
                         <input
                           type="text"
@@ -396,7 +400,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                       </div>
                       <div>
                         <label className="block text-xs text-text-secondary mb-1">
-                          Arguments
+                          {t['mcp.config.arguments']}
                         </label>
                         <input
                           type="text"
@@ -411,7 +415,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                     </div>
                     <div>
                       <label className="block text-xs text-text-secondary mb-1">
-                        Environment Variables (JSON)
+                        {t['mcp.config.envVars']}
                       </label>
                       <textarea
                         value={formData.env}
@@ -428,7 +432,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                   <>
                     <div>
                       <label className="block text-xs text-text-secondary mb-1">
-                        URL
+                        {t['mcp.config.url']}
                       </label>
                       <input
                         type="text"
@@ -442,7 +446,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                     </div>
                     <div>
                       <label className="block text-xs text-text-secondary mb-1">
-                        Headers (JSON)
+                        {t['mcp.config.headers']}
                       </label>
                       <textarea
                         value={formData.headers}
@@ -467,7 +471,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                       className="rounded border-border"
                     />
                     <label htmlFor="enabled" className="text-xs text-text-secondary">
-                      Enable this server (uncheck to disable inherited global server)
+                      {t['mcp.config.enableServer']}
                     </label>
                   </div>
                 )}
@@ -477,7 +481,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                     onClick={resetForm}
                     className="px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
                   >
-                    Cancel
+                    {t['mcp.config.cancel']}
                   </button>
                   <button
                     onClick={handleSaveServer}
@@ -485,7 +489,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                     className="px-3 py-1.5 text-sm bg-primary hover:bg-primary-hover text-white rounded transition-colors flex items-center gap-1 disabled:opacity-50"
                   >
                     <Save size={14} strokeWidth={1.5} />
-                    {saving ? 'Saving...' : 'Save'}
+                    {saving ? t['mcp.config.saving'] : t['mcp.config.save']}
                   </button>
                 </div>
               </div>
@@ -513,16 +517,16 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                       </span>
                       {getStatusBadge(name)}
                       {source === 'project' ? (
-                        <div title="Project config">
+                        <div title={t['mcp.config.projectConfig']}>
                           <Folder size={12} className="text-primary" />
                         </div>
                       ) : (
-                        <div title="Global config">
+                        <div title={t['mcp.config.globalConfig']}>
                           <Globe size={12} className="text-text-secondary" />
                         </div>
                       )}
                       {isDisabled && (
-                        <span className="text-[10px] text-error">disabled</span>
+                        <span className="text-[10px] text-error">{t['mcp.config.disabled']}</span>
                       )}
                     </div>
                     <div className="text-xs text-text-secondary truncate mt-0.5">
@@ -532,7 +536,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                     </div>
                     {status?.status === 'connected' && !isDisabled && (
                       <div className="text-xs text-success mt-0.5">
-                        {status.toolCount} tools available
+                        {tf(t['mcp.config.toolsAvailable'], { count: status.toolCount })}
                       </div>
                     )}
                   </div>
@@ -542,7 +546,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                         onClick={() => onDisconnect(name)}
                         className="px-2 py-1 text-xs text-warning hover:bg-warning/20 rounded transition-colors"
                       >
-                        Disconnect
+                        {t['mcp.config.disconnect']}
                       </button>
                     ) : !isDisabled && status?.status === 'disconnected' ? (
                       <button
@@ -550,7 +554,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                         className="px-2 py-1 text-xs text-success hover:bg-success/20 rounded transition-colors flex items-center gap-1"
                       >
                         <RefreshCw size={12} strokeWidth={1.5} />
-                        Connect
+                        {t['mcp.config.connect']}
                       </button>
                     ) : isDisabled ? null : (
                       <span className="text-xs text-text-secondary">
@@ -563,7 +567,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                           onClick={() => handleEditServer(name, activeTab === 'global' ? 'global' : 'project')}
                           className="p-1 text-text-secondary hover:text-text-primary hover:bg-hover rounded transition-colors"
                         >
-                          <span className="text-xs">Edit</span>
+                          <span className="text-xs">{t['mcp.config.edit']}</span>
                         </button>
                         <button
                           onClick={() => handleDeleteServer(name, activeTab === 'global' ? 'global' : 'project')}
@@ -577,7 +581,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                       <button
                         onClick={() => handleToggleServer(name, 'project')}
                         className="p-1 text-text-secondary hover:text-primary transition-colors"
-                        title={isDisabled ? 'Enable server' : 'Disable server'}
+                        title={isDisabled ? t['mcp.config.enableServerTitle'] : t['mcp.config.disableServerTitle']}
                       >
                         {isDisabled ? (
                           <ToggleLeft size={16} strokeWidth={1.5} />
@@ -598,13 +602,14 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
 };
 
 export const MCPConfigView: React.FC<MCPConfigContentProps> = (props) => {
-  const hook = useMCPConfig(true, props.currentWorkspacePath, props.onRefresh);
+  const t = useTranslation();
+  const hook = useMCPConfig(true, props.currentWorkspacePath, props.onRefresh, t);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="p-4 border-b border-border">
         <h2 className="text-lg font-semibold text-text-primary">
-          MCP Server Configuration
+          {t['mcp.config.title']}
         </h2>
       </div>
       <MCPConfigInner {...props} hook={hook} />
@@ -617,7 +622,8 @@ export const MCPConfigModal: React.FC<MCPConfigModalProps> = ({
   onClose,
   ...contentProps
 }) => {
-  const hook = useMCPConfig(isOpen, contentProps.currentWorkspacePath, contentProps.onRefresh);
+  const t = useTranslation();
+  const hook = useMCPConfig(isOpen, contentProps.currentWorkspacePath, contentProps.onRefresh, t);
 
   if (!isOpen) return null;
 
@@ -626,7 +632,7 @@ export const MCPConfigModal: React.FC<MCPConfigModalProps> = ({
       <div className="bg-surface rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col border border-border">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="text-lg font-semibold text-text-primary">
-            MCP Server Configuration
+            {t['mcp.config.title']}
           </h2>
           <button
             onClick={onClose}
@@ -643,7 +649,7 @@ export const MCPConfigModal: React.FC<MCPConfigModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
           >
-            Close
+            {t['mcp.config.close']}
           </button>
         </div>
       </div>

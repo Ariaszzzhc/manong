@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { ChevronRight, Wrench } from 'lucide-react';
 import type { Part, ToolCallPart, ToolResultPart } from '../../shared/types';
 import { ToolPartView } from './ToolPartView';
+import { useTranslation, tf } from '../i18n';
 
 interface ToolGroupCollapseProps {
   parts: Part[];
@@ -36,6 +37,7 @@ const pairToolCallsWithResults = (parts: Part[]): Array<{ call: ToolCallPart; re
 
 export const ToolGroupCollapse: React.FC<ToolGroupCollapseProps> = ({ parts }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const t = useTranslation();
 
   const toolPairs = useMemo(() => pairToolCallsWithResults(parts), [parts]);
   const toolCallCount = toolPairs.length;
@@ -56,7 +58,7 @@ export const ToolGroupCollapse: React.FC<ToolGroupCollapseProps> = ({ parts }) =
           className={isExpanded ? "text-text-primary" : "text-text-secondary"} 
         />
         <span className="text-[12px] font-medium tracking-wide">
-          {toolCallCount} Tool{toolCallCount !== 1 ? 's' : ''} Used
+          {tf(toolCallCount !== 1 ? t['tool.toolsUsedPlural'] : t['tool.toolsUsedSingular'], { count: toolCallCount })}
         </span>
         <ChevronRight
           size={12}
