@@ -12,9 +12,11 @@ module.exports = {
           DEFAULT: 'var(--primary)',
           hover: 'var(--primary-hover)',
         },
+        'on-primary': 'var(--on-primary)',
         success: 'var(--success)',
         warning: 'var(--warning)',
         error: 'var(--error)',
+        'on-error': 'var(--on-error)',
         info: 'var(--info)',
         // Theme-aware colors using CSS variables
         background: 'var(--background)',

@@ -35,7 +35,7 @@ export const WelcomePage: React.FC = () => {
 
         <button
           onClick={handleOpenFolder}
-          className="w-full py-3 px-6 bg-primary hover:bg-primary-hover rounded-lg text-white font-medium transition-colors flex items-center justify-center gap-2 mb-6"
+          className="w-full py-3 px-6 bg-primary hover:bg-primary-hover rounded-lg text-on-primary font-medium transition-colors flex items-center justify-center gap-2 mb-6"
         >
           <FolderOpen size={20} strokeWidth={1.5} />
           {t['welcome.openFolder']}

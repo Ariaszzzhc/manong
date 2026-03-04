@@ -490,7 +490,7 @@ export const ChatPanel: React.FC = () => {
                   </span>
                   <button
                     onClick={handleStop}
-                    className="p-1.5 bg-error text-white rounded-lg hover:bg-error/90 transition-all"
+                    className="p-1.5 bg-error text-on-error rounded-lg hover:bg-error/90 transition-all"
                     title={t['chat.stopGeneration']}
                   >
                     <Square size={14} fill="currentColor" strokeWidth={0} />
@@ -509,7 +509,7 @@ export const ChatPanel: React.FC = () => {
                   <button
                     onClick={handleSend}
                     disabled={!input.trim() && attachments.length === 0}
-                    className="p-1.5 bg-text-primary text-background rounded-lg hover:opacity-90 disabled:opacity-30 disabled:bg-surface-elevated disabled:text-text-secondary transition-all"
+                    className="p-1.5 bg-primary text-on-primary rounded-lg hover:bg-primary-hover disabled:opacity-30 disabled:bg-surface-elevated disabled:text-text-secondary transition-all"
                     title={t['chat.sendMessage']}
                   >
                     <ArrowUp size={16} strokeWidth={2} />

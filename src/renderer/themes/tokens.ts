@@ -29,9 +29,11 @@ export interface ThemeTokens {
   // Brand & Status
   primary: string;          // Brand primary color
   primaryHover: string;     // Brand primary hover color
+  onPrimary: string;        // Text on primary background
   success: string;          // Success state
   warning: string;          // Warning state
   error: string;            // Error state
+  onError: string;          // Text on error background
   info: string;             // Info state
 }
 
@@ -53,9 +55,11 @@ export const lightTokens: ThemeTokens = {
   // Brand & Status - Blue/Indigo based for professional look
   primary: '#2563EB',         // Blue 600
   primaryHover: '#1D4ED8',    // Blue 700
+  onPrimary: '#FFFFFF',       // White text on primary
   success: '#059669',         // Emerald 600
   warning: '#D97706',         // Amber 600
   error: '#DC2626',           // Red 600
+  onError: '#FFFFFF',         // White text on error
   info: '#2563EB',            // Blue 600
 };
 
@@ -77,9 +81,11 @@ export const darkTokens: ThemeTokens = {
   // Brand & Status
   primary: '#3B82F6',         // Blue 500
   primaryHover: '#60A5FA',    // Blue 400
+  onPrimary: '#FFFFFF',       // White text on primary
   success: '#10B981',         // Emerald 500
   warning: '#F59E0B',         // Amber 500
   error: '#EF4444',           // Red 500
+  onError: '#FFFFFF',         // White text on error
   info: '#3B82F6',            // Blue 500
 };
 

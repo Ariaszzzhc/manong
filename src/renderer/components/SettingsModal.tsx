@@ -150,7 +150,7 @@ const SettingsFormContent: React.FC<{ onSave: () => void; saved: boolean; apiKey
     <div className="flex justify-end gap-2 mt-6">
       <button
         onClick={onSave}
-        className="px-4 py-2 text-sm bg-primary hover:bg-primary-hover text-white rounded transition-colors flex items-center gap-2"
+        className="px-4 py-2 text-sm bg-primary hover:bg-primary-hover text-on-primary rounded transition-colors flex items-center gap-2"
       >
         <Check size={16} strokeWidth={1.5} />
         {saved ? t['settings.saved'] : t['settings.save']}

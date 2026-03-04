@@ -317,7 +317,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                   setShowAddForm(true);
                 }}
                 disabled={activeTab === 'project' && !hasProject}
-                className="flex items-center gap-1 px-3 py-1.5 text-xs bg-primary hover:bg-primary-hover text-white rounded transition-colors disabled:opacity-50"
+                className="flex items-center gap-1 px-3 py-1.5 text-xs bg-primary hover:bg-primary-hover text-on-primary rounded transition-colors disabled:opacity-50"
               >
                 <Plus size={14} strokeWidth={1.5} />
                 {t['mcp.config.addServer']}
@@ -486,7 +486,7 @@ const MCPConfigInner: React.FC<MCPConfigContentProps & { hook: ReturnType<typeof
                   <button
                     onClick={handleSaveServer}
                     disabled={saving}
-                    className="px-3 py-1.5 text-sm bg-primary hover:bg-primary-hover text-white rounded transition-colors flex items-center gap-1 disabled:opacity-50"
+                    className="px-3 py-1.5 text-sm bg-primary hover:bg-primary-hover text-on-primary rounded transition-colors flex items-center gap-1 disabled:opacity-50"
                   >
                     <Save size={14} strokeWidth={1.5} />
                     {saving ? t['mcp.config.saving'] : t['mcp.config.save']}

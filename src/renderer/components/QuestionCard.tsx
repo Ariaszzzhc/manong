@@ -294,7 +294,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
                     onClick={() =>
                       handleCustomInputSubmit(isMultiQuestion ? currentTab : 0)
                     }
-                    className="px-2 py-1.5 bg-primary text-white text-xs rounded hover:bg-primary-hover transition-colors whitespace-nowrap"
+                    className="px-2 py-1.5 bg-primary text-on-primary text-xs rounded hover:bg-primary-hover transition-colors whitespace-nowrap"
                   >
                     {t['question.use']}
                   </button>
@@ -328,7 +328,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
           {isConfirmPage ? (
             <button
               onClick={handleSubmit}
-              className="px-3 py-1 bg-primary text-white text-xs rounded hover:bg-primary-hover transition-colors flex items-center gap-1"
+              className="px-3 py-1 bg-primary text-on-primary text-xs rounded hover:bg-primary-hover transition-colors flex items-center gap-1"
             >
               {t['question.confirm']}
               <ChevronRight size={12} />
@@ -337,7 +337,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             <button
               onClick={handleSubmit}
               disabled={!canProceed()}
-              className="px-3 py-1 bg-primary text-white text-xs rounded hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+              className="px-3 py-1 bg-primary text-on-primary text-xs rounded hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
             >
               {currentTab === questions.length - 1 ? t['question.review'] : t['question.next']}
               <ChevronRight size={12} />
@@ -354,7 +354,7 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             <button
               onClick={handleSubmit}
               disabled={!canProceed()}
-              className="px-3 py-1 bg-primary text-white text-xs rounded hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+              className="px-3 py-1 bg-primary text-on-primary text-xs rounded hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
             >
               {t['question.submit']}
               <ChevronRight size={12} />

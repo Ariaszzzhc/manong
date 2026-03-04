@@ -77,7 +77,7 @@ export const PermissionCard: React.FC<PermissionCardProps> = ({
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => onRespond('allow')}
-            className="px-3 py-1 bg-primary text-white text-xs rounded hover:bg-primary-hover transition-colors"
+            className="px-3 py-1 bg-primary text-on-primary text-xs rounded hover:bg-primary-hover transition-colors"
           >
             {t['permission.allow']}
             <span className="ml-1 opacity-60 text-[10px]">(y)</span>
