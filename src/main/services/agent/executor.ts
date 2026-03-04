@@ -212,7 +212,8 @@ export class AgentExecutor {
               const decision = await this.permissionService.check(
                 tc.toolName,
                 tc.args as Record<string, unknown>,
-                this.sessionId
+                this.sessionId,
+                this.workingDir
               );
               if (decision === 'deny') {
                 const result = `Permission denied: User rejected "${tc.toolName}" execution`;
@@ -246,6 +247,7 @@ export class AgentExecutor {
               toolName: tc.toolName,
               result: result.output,
               isError: !result.success,
+              diff: result.diff,
             });
 
             this.addToolResult(messages, tc.toolCallId, tc.toolName, result.output, !result.success);

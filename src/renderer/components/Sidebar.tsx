@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Plus, Terminal, Code, ChevronRight, Circle, CircleDot, CheckCircle } from 'lucide-react';
 import { useAppStore } from '../stores/app';
 import { useTranslation, tf } from '../i18n';
 import { shortcutTitle } from '../hooks/useShortcutHint';
+import type { FileDiffInfo } from '../../shared/types';
 
 const formatTokens = (count: number): string => {
   if (count >= 1000000) {
@@ -14,7 +15,7 @@ const formatTokens = (count: number): string => {
 };
 
 export const Sidebar: React.FC = () => {
-  const { sessions, currentSessionId, setCurrentSession, deleteSession, todos } =
+  const { sessions, currentSessionId, setCurrentSession, deleteSession, todos, pendingParts } =
     useAppStore();
   const t = useTranslation();
 
@@ -42,6 +43,34 @@ export const Sidebar: React.FC = () => {
     : 0;
   const maxContext = 200000; // Typical model context window
   const usagePercent = Math.min((totalTokens / maxContext) * 100, 100);
+
+  // Collect file changes from current session messages + pending parts
+  const fileChanges = useMemo(() => {
+    const changesMap = new Map<string, FileDiffInfo>();
+
+    // From committed messages
+    if (currentSession) {
+      for (const msg of currentSession.messages) {
+        for (const part of msg.parts) {
+          if (part.type === 'tool-result' && part.diff) {
+            changesMap.set(part.diff.filePath, part.diff);
+          }
+        }
+      }
+    }
+
+    // From streaming pending parts
+    for (const part of pendingParts) {
+      if (part.type === 'tool-result' && part.diff) {
+        changesMap.set(part.diff.filePath, part.diff);
+      }
+    }
+
+    return Array.from(changesMap.values());
+  }, [currentSession, pendingParts]);
+
+  const totalAdded = fileChanges.reduce((sum, c) => sum + c.linesAdded, 0);
+  const totalRemoved = fileChanges.reduce((sum, c) => sum + c.linesRemoved, 0);
 
   return (
     <aside className="w-64 bg-surface-elevated border-r border-border flex flex-col shrink-0">
@@ -119,6 +148,47 @@ export const Sidebar: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* File Changes */}
+      {fileChanges.length > 0 && (
+        <div className="px-3 py-2 border-t border-border">
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">
+              {t['sidebar.filesChanged']} ({fileChanges.length})
+            </div>
+            <span className="text-[10px] font-mono">
+              <span className="text-green-400">+{totalAdded}</span>
+              {totalRemoved > 0 && (
+                <span className="text-red-400 ml-1">-{totalRemoved}</span>
+              )}
+            </span>
+          </div>
+          <div className="space-y-0.5 max-h-32 overflow-y-auto">
+            {fileChanges.map((change, idx) => {
+              const fileName = change.filePath.split('/').pop() || change.filePath;
+              return (
+                <div
+                  key={idx}
+                  className="flex items-center gap-1.5 text-[11px] font-mono py-0.5 text-text-secondary"
+                >
+                  <span className={change.changeType === 'created' ? 'text-green-400' : 'text-yellow-400'}>
+                    {change.changeType === 'created' ? 'A' : 'M'}
+                  </span>
+                  <span className="flex-1 truncate" title={change.filePath}>
+                    {fileName}
+                  </span>
+                  <span className="shrink-0 text-[10px]">
+                    <span className="text-green-400">+{change.linesAdded}</span>
+                    {change.linesRemoved > 0 && (
+                      <span className="text-red-400 ml-1">-{change.linesRemoved}</span>
+                    )}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Todo List */}
       {todos && todos.length > 0 && (

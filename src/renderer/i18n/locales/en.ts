@@ -23,6 +23,7 @@ export const en = {
   'sidebar.tasks': 'Tasks',
   'sidebar.contextUsage': 'Context Usage',
   'sidebar.tokens': '{count} tokens',
+  'sidebar.filesChanged': 'Files Changed',
 
   // Welcome
   'welcome.title': 'Manong',

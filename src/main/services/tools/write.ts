@@ -4,6 +4,7 @@ import { toolRegistry } from './registry';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { createLogger } from '../logger';
+import { computeFileDiff } from './diff-utils';
 
 const log = createLogger('write_file');
 
@@ -42,15 +43,26 @@ export const writeFileTool = defineTool({
         ? params.file_path
         : path.join(context.workingDir, params.file_path);
 
+      // Read existing content for diff (empty string if file doesn't exist)
+      let original = '';
+      try {
+        original = await fs.readFile(filePath, 'utf-8');
+      } catch {
+        // File doesn't exist yet, original stays empty
+      }
+
       // Ensure directory exists
       const dir = path.dirname(filePath);
       await fs.mkdir(dir, { recursive: true });
 
       await fs.writeFile(filePath, params.content, 'utf-8');
 
+      const diff = computeFileDiff(params.file_path, original, params.content);
+
       return {
         success: true,
         output: `File written successfully: ${filePath}`,
+        diff,
       };
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';

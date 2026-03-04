@@ -15,6 +15,7 @@ import {
 import type { ToolCallPart, ToolResultPart } from '../../shared/types';
 import { useTranslation, tf } from '../i18n';
 import type { Translations } from '../i18n/locales/en';
+import { DiffView } from './DiffView';
 
 interface ToolPartViewProps {
   toolCall: ToolCallPart;
@@ -124,6 +125,8 @@ export const ToolPartView: React.FC<ToolPartViewProps> = ({ toolCall, toolResult
   const { server } = formatToolName(toolCall.toolName);
   const isError = toolResult?.isError;
   const isPending = !toolResult;
+  const diffInfo = toolResult?.diff;
+  const hasDiff = !!diffInfo;
 
   return (
     <div className={`mb-3 group relative`}>
@@ -134,12 +137,20 @@ export const ToolPartView: React.FC<ToolPartViewProps> = ({ toolCall, toolResult
         <div className="flex items-center justify-center w-5 h-5 rounded-md bg-surface border border-border shadow-sm">
           <Icon size={11} className={isError ? 'text-error' : isPending ? 'text-warning' : 'text-text-primary'} strokeWidth={2} />
         </div>
-        
+
         <div className="flex-1 min-w-0 flex items-center gap-2">
           <span className="font-mono text-[12px] text-text-primary opacity-90 truncate">{summary}</span>
           {isMCP && server && (
             <span className="text-[9px] px-1 py-0.5 bg-surface-elevated border border-border text-text-secondary rounded font-mono uppercase tracking-wider">
               {server}
+            </span>
+          )}
+          {hasDiff && (
+            <span className="text-[10px] font-mono shrink-0">
+              <span className="text-green-400">+{diffInfo.linesAdded}</span>
+              {diffInfo.linesRemoved > 0 && (
+                <span className="text-red-400 ml-1">-{diffInfo.linesRemoved}</span>
+              )}
             </span>
           )}
         </div>
@@ -155,31 +166,39 @@ export const ToolPartView: React.FC<ToolPartViewProps> = ({ toolCall, toolResult
       </div>
 
       {isExpanded && (
-        <div className="mt-2 text-[11px] font-mono bg-code-bg border border-code-border rounded-lg p-3 space-y-3 shadow-sm">
-          {/* Arguments */}
-          <div className="flex gap-2">
-            <span className="text-info shrink-0">$</span>
-            <div className="overflow-x-auto whitespace-pre-wrap break-all">
-              {Object.entries(toolCall.args).map(([k, v]) => (
-                <span key={k} className="mr-2">
-                  <span className="text-primary">--{k}</span>=
-                  <span className="text-success">
-                    {typeof v === 'string' ? `"${v}"` : JSON.stringify(v)}
-                  </span>
-                </span>
-              ))}
+        <div className="mt-2 text-[11px] font-mono bg-code-bg border border-code-border rounded-lg overflow-hidden shadow-sm">
+          {hasDiff ? (
+            <div className="max-h-80 overflow-y-auto">
+              <DiffView diff={diffInfo.diff} />
             </div>
-          </div>
-          
-          {/* Result */}
-          {toolResult && (
-            <div className="flex gap-2 pt-2 border-t border-code-border/50">
-              <span className="text-text-secondary shrink-0">{'>'}</span>
-              <div className={`overflow-x-auto whitespace-pre-wrap break-all max-h-60 overflow-y-auto w-full ${isError ? 'text-error' : 'text-text-secondary'}`}>
-                {typeof toolResult.result === 'string'
-                  ? toolResult.result
-                  : JSON.stringify(toolResult.result, null, 2)}
+          ) : (
+            <div className="p-3 space-y-3">
+              {/* Arguments */}
+              <div className="flex gap-2">
+                <span className="text-info shrink-0">$</span>
+                <div className="overflow-x-auto whitespace-pre-wrap break-all">
+                  {Object.entries(toolCall.args).map(([k, v]) => (
+                    <span key={k} className="mr-2">
+                      <span className="text-primary">--{k}</span>=
+                      <span className="text-success">
+                        {typeof v === 'string' ? `"${v}"` : JSON.stringify(v)}
+                      </span>
+                    </span>
+                  ))}
+                </div>
               </div>
+
+              {/* Result */}
+              {toolResult && (
+                <div className="flex gap-2 pt-2 border-t border-code-border/50">
+                  <span className="text-text-secondary shrink-0">{'>'}</span>
+                  <div className={`overflow-x-auto whitespace-pre-wrap break-all max-h-60 overflow-y-auto w-full ${isError ? 'text-error' : 'text-text-secondary'}`}>
+                    {typeof toolResult.result === 'string'
+                      ? toolResult.result
+                      : JSON.stringify(toolResult.result, null, 2)}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

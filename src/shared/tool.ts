@@ -1,4 +1,5 @@
 import { ZodSchema, z } from 'zod';
+import type { FileDiffInfo } from './types';
 
 export interface ToolDefinition<T = unknown> {
   name: string;
@@ -17,6 +18,7 @@ export interface ToolResult {
   success: boolean;
   output: string;
   error?: string;
+  diff?: FileDiffInfo;
 }
 
 export function defineTool<T>(

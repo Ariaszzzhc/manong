@@ -262,6 +262,7 @@ export const useAppStore = create<AppState>((set, get) => ({
             toolName: event.toolName ?? '',
             result: event.result,
             isError: event.isError,
+            diff: event.diff,
           },
         ],
       }));

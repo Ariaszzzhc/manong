@@ -38,6 +38,7 @@ export interface PermissionRequest {
   args: Record<string, unknown>;
   riskLevel: ToolRiskLevel;
   description: string;
+  diff?: string;
 }
 
 export type PermissionDecision = 'allow' | 'deny' | 'always-allow';

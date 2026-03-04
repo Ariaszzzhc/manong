@@ -25,6 +25,7 @@ export const zhCN: Translations = {
   'sidebar.tasks': '任务',
   'sidebar.contextUsage': '上下文使用',
   'sidebar.tokens': '{count} 令牌',
+  'sidebar.filesChanged': '文件变更',
 
   // Welcome
   'welcome.title': 'Manong',

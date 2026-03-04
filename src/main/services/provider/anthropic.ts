@@ -43,7 +43,7 @@ export class AnthropicProvider {
 
     const requestOptions: Anthropic.Messages.MessageCreateParams = {
       model: this.model,
-      max_tokens: 4096,
+      max_tokens: 16384,
       messages: anthropicMessages,
       system: systemPrompt,
       tools: anthropicTools.length > 0 ? anthropicTools : undefined,
@@ -103,20 +103,24 @@ export class AnthropicProvider {
         if (block?.type === 'tool_use') {
           // Parse complete JSON and yield tool call
           let args: unknown = {};
+          let parseError = false;
           try {
             if (block.jsonBuffer.trim()) {
               args = JSON.parse(block.jsonBuffer);
             }
           } catch (e) {
-            log.error('Failed to parse tool args:', e, 'JSON:', block.jsonBuffer);
+            parseError = true;
+            log.error('Failed to parse tool args (possibly truncated by max_tokens):', block.name, 'buffer length:', block.jsonBuffer.length);
           }
 
-          yield {
-            type: 'tool-call',
-            toolCallId: block.id as string,
-            toolName: block.name as string,
-            args,
-          };
+          if (!parseError) {
+            yield {
+              type: 'tool-call',
+              toolCallId: block.id as string,
+              toolName: block.name as string,
+              args,
+            };
+          }
         }
 
         contentBlocks.delete(index);

@@ -1,4 +1,6 @@
 import type { BrowserWindow } from 'electron';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 import { IPC_CHANNELS } from '../../../shared/ipc';
 import type {
   PermissionMode,
@@ -14,6 +16,7 @@ import {
 } from '../../../shared/permission-types';
 import { PermissionConfigService } from './config';
 import { createLogger } from '../logger';
+import { computeFileDiff } from '../tools/diff-utils';
 
 const log = createLogger('PermissionService');
 
@@ -69,7 +72,8 @@ export class PermissionService {
   async check(
     toolName: string,
     args: Record<string, unknown>,
-    sessionId: string
+    sessionId: string,
+    workingDir?: string
   ): Promise<'allow' | 'deny'> {
     if (this.mode === 'bypassPermissions') {
       return 'allow';
@@ -96,7 +100,7 @@ export class PermissionService {
       return ruleResult;
     }
 
-    return this.promptUser(toolName, args, riskLevel, specifier, sessionId);
+    return this.promptUser(toolName, args, riskLevel, specifier, sessionId, workingDir);
   }
 
   resolvePermission(requestId: string, decision: PermissionDecision): void {
@@ -225,7 +229,8 @@ export class PermissionService {
     args: Record<string, unknown>,
     riskLevel: ToolRiskLevel,
     _specifier: string,
-    sessionId: string
+    sessionId: string,
+    workingDir?: string
   ): Promise<'allow' | 'deny'> {
     if (!this.mainWindow || this.mainWindow.isDestroyed()) {
       log.warn('No window available for permission prompt, denying');
@@ -236,6 +241,8 @@ export class PermissionService {
 
     this.pendingRequestDetails.set(requestId, { toolName, args });
 
+    const previewDiff = await this.computePreviewDiff(toolName, args, workingDir);
+
     const request: PermissionRequest = {
       id: requestId,
       sessionId,
@@ -243,6 +250,7 @@ export class PermissionService {
       args,
       riskLevel,
       description: this.buildDescription(toolName, args),
+      diff: previewDiff,
     };
 
     try {
@@ -262,6 +270,61 @@ export class PermissionService {
       throw error;
     } finally {
       this.pendingRequestDetails.delete(requestId);
+    }
+  }
+
+  private async computePreviewDiff(
+    toolName: string,
+    args: Record<string, unknown>,
+    workingDir?: string
+  ): Promise<string | undefined> {
+    try {
+      const resolveFilePath = (filePath: string): string => {
+        if (path.isAbsolute(filePath)) return filePath;
+        if (workingDir) return path.join(workingDir, filePath);
+        return filePath;
+      };
+
+      if (toolName === 'edit_file') {
+        const filePath = String(args.file_path || '');
+        const oldString = String(args.old_string || '');
+        const newString = String(args.new_string ?? '');
+        const replaceAll = Boolean(args.replace_all);
+        if (!filePath || !oldString) return undefined;
+
+        const absPath = resolveFilePath(filePath);
+        const content = await fs.readFile(absPath, 'utf-8');
+        if (!content.includes(oldString)) return undefined;
+
+        const newContent = replaceAll
+          ? content.split(oldString).join(newString)
+          : content.replace(oldString, newString);
+
+        const info = computeFileDiff(filePath, content, newContent);
+        return info.diff;
+      }
+
+      if (toolName === 'write_file') {
+        const filePath = String(args.file_path || '');
+        const newContent = String(args.content ?? '');
+        if (!filePath) return undefined;
+
+        let original = '';
+        try {
+          const absPath = resolveFilePath(filePath);
+          original = await fs.readFile(absPath, 'utf-8');
+        } catch {
+          // File doesn't exist yet
+        }
+
+        const info = computeFileDiff(filePath, original, newContent);
+        return info.diff;
+      }
+
+      return undefined;
+    } catch (error) {
+      log.debug('Failed to compute preview diff:', error);
+      return undefined;
     }
   }
 }

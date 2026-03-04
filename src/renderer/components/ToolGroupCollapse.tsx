@@ -41,7 +41,7 @@ export const ToolGroupCollapse: React.FC<ToolGroupCollapseProps> = ({ parts }) =
 
   const toolPairs = useMemo(() => pairToolCallsWithResults(parts), [parts]);
   const toolCallCount = toolPairs.length;
-  
+
   // Check if any tool is currently running
   const isRunning = toolPairs.some(pair => !pair.result);
 
@@ -52,10 +52,10 @@ export const ToolGroupCollapse: React.FC<ToolGroupCollapseProps> = ({ parts }) =
         onClick={() => setIsExpanded(!isExpanded)}
         className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors bg-transparent border-none p-0 cursor-pointer w-full text-left"
       >
-        <Wrench 
-          size={13} 
-          strokeWidth={2} 
-          className={isExpanded ? "text-text-primary" : "text-text-secondary"} 
+        <Wrench
+          size={13}
+          strokeWidth={2}
+          className={isExpanded ? "text-text-primary" : "text-text-secondary"}
         />
         <span className="text-[12px] font-medium tracking-wide">
           {tf(toolCallCount !== 1 ? t['tool.toolsUsedPlural'] : t['tool.toolsUsedSingular'], { count: toolCallCount })}

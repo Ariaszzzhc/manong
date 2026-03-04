@@ -4,6 +4,7 @@ import { toolRegistry } from './registry';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { createLogger } from '../logger';
+import { computeFileDiff } from './diff-utils';
 
 const log = createLogger('edit_file');
 
@@ -70,9 +71,12 @@ export const editFileTool = defineTool({
 
       await fs.writeFile(filePath, newContent, 'utf-8');
 
+      const diff = computeFileDiff(params.file_path, content, newContent);
+
       return {
         success: true,
         output: `File edited successfully: ${filePath}`,
+        diff,
       };
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';

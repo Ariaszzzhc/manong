@@ -1,5 +1,13 @@
 // Core message types shared between main and renderer processes
 
+export interface FileDiffInfo {
+  filePath: string;
+  changeType: 'modified' | 'created';
+  diff: string;           // Unified diff string
+  linesAdded: number;
+  linesRemoved: number;
+}
+
 export interface TokenUsage {
   inputTokens: number;
   outputTokens: number;
@@ -32,6 +40,7 @@ export interface ToolResultPart {
   toolName: string;
   result: unknown;
   isError?: boolean;
+  diff?: FileDiffInfo;
 }
 
 export interface ThinkingPart {
@@ -114,6 +123,7 @@ export interface StreamEvent {
   // For tool-result
   result?: unknown;
   isError?: boolean;
+  diff?: FileDiffInfo;
   // For usage event
   usage?: TokenUsage;
   lastUsage?: TokenUsage;

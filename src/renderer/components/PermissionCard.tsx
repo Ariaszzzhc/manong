@@ -2,6 +2,7 @@ import React, { useEffect, useCallback } from 'react';
 import { Shield, Terminal, FileEdit } from 'lucide-react';
 import type { PermissionRequest, PermissionDecision } from '../../shared/permission-types';
 import { useTranslation } from '../i18n';
+import { DiffView } from './DiffView';
 
 interface PermissionCardProps {
   request: PermissionRequest;
@@ -64,6 +65,12 @@ export const PermissionCard: React.FC<PermissionCardProps> = ({
             {request.description}
           </code>
         </div>
+
+        {request.diff && (
+          <div className="mt-2 bg-background rounded border border-border max-h-64 overflow-y-auto">
+            <DiffView diff={request.diff} />
+          </div>
+        )}
       </div>
 
       <div className="flex items-center justify-between px-3 py-2 border-t border-border bg-surface-hover">
