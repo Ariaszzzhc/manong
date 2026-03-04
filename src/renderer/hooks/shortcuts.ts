@@ -190,4 +190,21 @@ export const SHORTCUTS: ShortcutDefinition[] = [
       window.dispatchEvent(new CustomEvent('manong:scroll-to-bottom'));
     },
   },
+
+  // --- Permission ---
+  {
+    id: 'cyclePermissionMode',
+    key: 'Tab',
+    shift: true,
+    labelKey: 'shortcuts.cyclePermissionMode',
+    allowInInput: true,
+    action: async () => {
+      const { useAppStore } = await import('../stores/app');
+      const state = useAppStore.getState();
+      const modes = ['default', 'acceptEdits', 'bypassPermissions'] as const;
+      const currentIdx = modes.indexOf(state.permissionMode);
+      const nextMode = modes[(currentIdx + 1) % modes.length];
+      state.setPermissionMode(nextMode);
+    },
+  },
 ];

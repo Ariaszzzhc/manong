@@ -8,6 +8,7 @@ import type {
   ImagePart,
 } from '../../shared/types';
 import type { MCPConfig, MCPServerStatus, LayeredMCPConfig } from '../../shared/mcp-types';
+import type { PermissionMode, PermissionConfig, PermissionDecision } from '../../shared/permission-types';
 import { AgentLoop } from '../services/agent/loop';
 import { storageService } from '../services/storage';
 import { skillService } from '../services/skill';
@@ -18,6 +19,7 @@ import {
   skipQuestion,
 } from '../services/tools/ask';
 import { setTodoWindow } from '../services/tools/todo';
+import { permissionService } from '../services/permission';
 import '../services/tools';
 
 const agentLoops = new Map<string, AgentLoop>();
@@ -31,6 +33,9 @@ export function setupIPC(mainWindow: BrowserWindow): void {
 
   // Set the window reference for todo tool
   setTodoWindow(mainWindow);
+
+  // Set the window reference for permission service
+  permissionService.setWindow(mainWindow);
 
   // =====================
   // Workspace Management
@@ -57,6 +62,9 @@ export function setupIPC(mainWindow: BrowserWindow): void {
     // Set workspace for MCP manager to load project-specific config
     await mcpManager.setWorkspace(path);
 
+    // Load permission config for workspace
+    await permissionService.load(path);
+
     return data;
   });
 
@@ -73,6 +81,9 @@ export function setupIPC(mainWindow: BrowserWindow): void {
 
     // Set workspace for MCP manager to load project-specific config
     await mcpManager.setWorkspace(path);
+
+    // Load permission config for workspace
+    await permissionService.load(path);
 
     return data;
   });
@@ -309,4 +320,33 @@ export function setupIPC(mainWindow: BrowserWindow): void {
   mcpManager.onStatusChange((statuses) => {
     mainWindow.webContents.send(IPC_CHANNELS.MCP_STATUS_CHANGED, statuses);
   });
+
+  // =====================
+  // Permission Management
+  // =====================
+
+  ipcMain.handle(
+    IPC_CHANNELS.PERMISSION_RESPOND,
+    (_event, requestId: string, decision: PermissionDecision) => {
+      permissionService.resolvePermission(requestId, decision);
+    }
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS.PERMISSION_SET_MODE,
+    (_event, mode: PermissionMode) => {
+      permissionService.setMode(mode);
+    }
+  );
+
+  ipcMain.handle(IPC_CHANNELS.PERMISSION_GET_CONFIG, () => {
+    return permissionService.getLayeredConfig();
+  });
+
+  ipcMain.handle(
+    IPC_CHANNELS.PERMISSION_SAVE_CONFIG,
+    async (_event, scope: string, config: PermissionConfig) => {
+      await permissionService.saveConfig(scope, config);
+    }
+  );
 }

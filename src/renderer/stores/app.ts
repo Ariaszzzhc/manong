@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Session, Message, Part, AppConfig, StreamEvent, Workspace, WorkspaceData, Skill, QuestionRequest, Todo } from '../../shared/types';
 import type { MCPServerStatus, MCPConfig, LayeredMCPConfig } from '../../shared/mcp-types';
+import type { PermissionMode, PermissionRequest, PermissionDecision } from '../../shared/permission-types';
 
 interface AppState {
   // Workspace
@@ -19,6 +20,10 @@ interface AppState {
 
   // Question state
   pendingQuestion: QuestionRequest | null;
+
+  // Permission state
+  permissionMode: PermissionMode;
+  pendingPermission: PermissionRequest | null;
 
   // Todo state
   todos: Todo[];
@@ -63,6 +68,11 @@ interface AppState {
   // Question Actions
   setPendingQuestion: (question: QuestionRequest | null) => void;
 
+  // Permission Actions
+  setPermissionMode: (mode: PermissionMode) => void;
+  setPendingPermission: (request: PermissionRequest | null) => void;
+  respondPermission: (requestId: string, decision: PermissionDecision) => void;
+
   // Todo Actions
   setTodos: (todos: Todo[]) => void;
 
@@ -84,6 +94,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   pendingMessageId: null,
   pendingParts: [],
   pendingQuestion: null,
+  permissionMode: 'default',
+  pendingPermission: null,
   todos: [],
   mcpStatuses: [],
   mcpConfig: null,
@@ -370,6 +382,22 @@ export const useAppStore = create<AppState>((set, get) => ({
   // =====================
 
   setPendingQuestion: (question) => set({ pendingQuestion: question }),
+
+  // =====================
+  // Permission Actions
+  // =====================
+
+  setPermissionMode: (mode) => {
+    set({ permissionMode: mode });
+    window.manong.permission.setMode(mode);
+  },
+
+  setPendingPermission: (request) => set({ pendingPermission: request }),
+
+  respondPermission: (requestId, decision) => {
+    window.manong.permission.respond(requestId, decision);
+    set({ pendingPermission: null });
+  },
 
   // =====================
   // Todo Actions

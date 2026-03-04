@@ -8,6 +8,7 @@ import type {
 } from '../../../shared/types';
 import { AgentExecutor } from './executor';
 import { cancelPendingQuestions } from '../tools/ask';
+import { permissionService } from '../permission';
 import type { BrowserWindow } from 'electron';
 import { createLogger } from '../logger';
 
@@ -165,6 +166,7 @@ export class AgentLoop {
       systemPrompt,
       workingDir: this.workingDir,
       sessionId: session.id,
+      permissionService,
     });
 
     try {
@@ -193,5 +195,6 @@ export class AgentLoop {
       this.executor = null;
     }
     cancelPendingQuestions();
+    permissionService.cancelPendingPermissions();
   }
 }

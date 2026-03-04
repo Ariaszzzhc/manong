@@ -1,13 +1,15 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
-import { Image, ArrowUp, Square } from 'lucide-react';
+import { Image, ArrowUp, Square, Shield, ShieldCheck, ShieldOff } from 'lucide-react';
 import { useAppStore } from '../stores/app';
 import { MessageItem } from './MessageItem';
 import { QuestionCard } from './QuestionCard';
+import { PermissionCard } from './PermissionCard';
 import { SlashCommandMenu } from './SlashCommandMenu';
 import type { Message, Part, ImagePart, QuestionAnswer, Skill } from '../../shared/types';
 import { v4 as uuidv4 } from 'uuid';
 import { compressImage } from '../utils/imageCompressor';
 import { useTranslation } from '../i18n';
+import type { TranslationKey } from '../i18n';
 
 const isMac = window.manong.platform === 'darwin';
 const SLASH_COMMAND_PATTERN = /^\/(\w+)(?:\s+(.*))?$/;
@@ -20,6 +22,8 @@ export const ChatPanel: React.FC = () => {
     pendingMessageId,
     pendingParts,
     pendingQuestion,
+    pendingPermission,
+    permissionMode,
     config,
     skills,
     updateSession,
@@ -27,6 +31,9 @@ export const ChatPanel: React.FC = () => {
     handleStreamEvent,
     loadSkills,
     setPendingQuestion,
+    setPendingPermission,
+    respondPermission,
+    setPermissionMode,
   } = useAppStore();
 
   const [input, setInput] = useState('');
@@ -81,7 +88,7 @@ export const ChatPanel: React.FC = () => {
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [currentSession?.messages, pendingParts]);
+  }, [currentSession?.messages, pendingParts, pendingPermission, pendingQuestion]);
 
   useEffect(() => {
     const unsubscribe = window.manong.agent.onStream((event) => {
@@ -100,6 +107,13 @@ export const ChatPanel: React.FC = () => {
     });
     return unsubscribe;
   }, [setPendingQuestion]);
+
+  useEffect(() => {
+    const unsubscribe = window.manong.permission.onAsk((request) => {
+      setPendingPermission(request);
+    });
+    return unsubscribe;
+  }, [setPendingPermission]);
 
   // CustomEvent listeners for keyboard shortcuts
   useEffect(() => {
@@ -371,7 +385,7 @@ export const ChatPanel: React.FC = () => {
   return (
     <main className="flex-1 flex flex-col bg-background relative" onPaste={handlePaste} onDragOver={handleDragOver} onDrop={handleDrop}>
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 pb-32">
+      <div className={`flex-1 overflow-y-auto px-4 ${pendingPermission || pendingQuestion ? 'pb-56' : 'pb-32'}`}>
         <div className="max-w-4xl mx-auto pt-8">
           {currentSession.messages.map((message) => (
             <MessageItem key={message.id} message={message} />
@@ -406,7 +420,14 @@ export const ChatPanel: React.FC = () => {
               onSelect={handleSlashSelect}
             />
           )}
-          {pendingQuestion ? (
+          {pendingPermission ? (
+            <div className="shadow-2xl rounded-2xl overflow-hidden border border-border backdrop-blur-xl" style={{ backgroundColor: 'color-mix(in srgb, var(--surface) 80%, transparent)' }}>
+              <PermissionCard
+                request={pendingPermission}
+                onRespond={(decision) => respondPermission(pendingPermission.id, decision)}
+              />
+            </div>
+          ) : pendingQuestion ? (
             <div className="shadow-2xl rounded-2xl overflow-hidden border border-border backdrop-blur-xl" style={{ backgroundColor: 'color-mix(in srgb, var(--surface) 80%, transparent)' }}>
               <QuestionCard
                 questions={pendingQuestion.questions}
@@ -463,6 +484,30 @@ export const ChatPanel: React.FC = () => {
                     className="hidden"
                     onChange={handleFileSelect}
                   />
+                  <button
+                    onClick={() => {
+                      const modes = ['default', 'acceptEdits', 'bypassPermissions'] as const;
+                      const idx = modes.indexOf(permissionMode);
+                      setPermissionMode(modes[(idx + 1) % modes.length]);
+                    }}
+                    className={`flex items-center gap-1 px-1.5 py-1 rounded-md text-[10px] font-medium transition-colors ${
+                      permissionMode === 'bypassPermissions'
+                        ? 'text-warning bg-warning/10 hover:bg-warning/20'
+                        : permissionMode === 'acceptEdits'
+                          ? 'text-primary bg-primary/10 hover:bg-primary/20'
+                          : 'text-text-secondary hover:text-text-primary hover:bg-hover'
+                    }`}
+                    title={`${t['shortcuts.cyclePermissionMode']} (Shift+Tab)`}
+                  >
+                    {permissionMode === 'bypassPermissions' ? (
+                      <ShieldOff size={13} strokeWidth={1.5} />
+                    ) : permissionMode === 'acceptEdits' ? (
+                      <ShieldCheck size={13} strokeWidth={1.5} />
+                    ) : (
+                      <Shield size={13} strokeWidth={1.5} />
+                    )}
+                    <span>{t[`permission.mode.${permissionMode}` as TranslationKey]}</span>
+                  </button>
                 </div>
 
                 {/* Right buttons */}

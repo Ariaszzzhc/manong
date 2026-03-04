@@ -59,4 +59,11 @@ export const IPC_CHANNELS = {
   MCP_SAVE_PROJECT_CONFIG: 'mcp:save-project-config',
   MCP_SET_WORKSPACE: 'mcp:set-workspace',
   MCP_STATUS_CHANGED: 'mcp:status-changed',
+
+  // Permission
+  PERMISSION_ASK: 'permission:ask',
+  PERMISSION_RESPOND: 'permission:respond',
+  PERMISSION_GET_CONFIG: 'permission:get-config',
+  PERMISSION_SAVE_CONFIG: 'permission:save-config',
+  PERMISSION_SET_MODE: 'permission:set-mode',
 } as const;

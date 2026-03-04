@@ -4,6 +4,7 @@ import { DEFAULT_TOKEN_USAGE } from '../../../shared/types';
 import type { ToolContext } from '../../../shared/tool';
 import { AnthropicProvider } from '../provider/anthropic';
 import { toolRegistry } from '../tools';
+import type { PermissionService } from '../permission/service';
 import { createLogger } from '../logger';
 
 const log = createLogger('AgentExecutor');
@@ -16,6 +17,7 @@ export interface ExecutorConfig {
   sessionId: string;
   agentId?: string;
   maxSteps?: number;
+  permissionService?: PermissionService;
 }
 
 export interface ExecutorResult {
@@ -36,6 +38,7 @@ export class AgentExecutor {
   private abortController: AbortController | null = null;
   private isPaused = false;
   private pauseResolver: (() => void) | null = null;
+  private permissionService: PermissionService | null;
 
   constructor(config: ExecutorConfig) {
     this.provider = new AnthropicProvider(config.provider);
@@ -45,6 +48,7 @@ export class AgentExecutor {
     this.sessionId = config.sessionId;
     this.agentId = config.agentId || uuidv4();
     this.maxSteps = config.maxSteps ?? 50;
+    this.permissionService = config.permissionService ?? null;
   }
 
   async execute(
@@ -203,6 +207,28 @@ export class AgentExecutor {
 
           try {
             await this.waitForResume();
+
+            if (this.permissionService) {
+              const decision = await this.permissionService.check(
+                tc.toolName,
+                tc.args as Record<string, unknown>,
+                this.sessionId
+              );
+              if (decision === 'deny') {
+                const result = `Permission denied: User rejected "${tc.toolName}" execution`;
+                this.addToolResult(messages, tc.toolCallId, tc.toolName, result, true);
+                onEvent?.({
+                  type: 'tool-result',
+                  sessionId: this.sessionId,
+                  messageId: assistantMsgId,
+                  toolCallId: tc.toolCallId,
+                  toolName: tc.toolName,
+                  result,
+                  isError: true,
+                });
+                continue;
+              }
+            }
 
             const context: ToolContext = {
               workingDir: this.workingDir,

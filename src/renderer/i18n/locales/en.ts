@@ -120,6 +120,16 @@ export const en = {
   'question.clickToSelect': 'Click to select',
   'question.submit': 'Submit',
 
+  // Permission
+  'permission.title': 'Permission Required',
+  'permission.allow': 'Allow',
+  'permission.deny': 'Deny',
+  'permission.alwaysAllow': 'Always Allow',
+  'permission.denied': 'Permission denied',
+  'permission.mode.default': 'Default',
+  'permission.mode.acceptEdits': 'Accept Edits',
+  'permission.mode.bypassPermissions': 'Bypass All',
+
   // Message
   'message.copy': 'Copy',
   'message.copied': 'Copied',
@@ -190,6 +200,7 @@ export const en = {
   'shortcuts.toggleTheme': 'Toggle Theme',
   'shortcuts.copyLastResponse': 'Copy Last Response',
   'shortcuts.scrollToBottom': 'Scroll to Bottom',
+  'shortcuts.cyclePermissionMode': 'Switch permission mode',
 } as const;
 
 export type Translations = typeof en;

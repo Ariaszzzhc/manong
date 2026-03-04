@@ -122,6 +122,16 @@ export const zhCN: Translations = {
   'question.clickToSelect': '点击选择',
   'question.submit': '提交',
 
+  // Permission
+  'permission.title': '需要权限',
+  'permission.allow': '允许',
+  'permission.deny': '拒绝',
+  'permission.alwaysAllow': '始终允许',
+  'permission.denied': '权限被拒绝',
+  'permission.mode.default': '默认',
+  'permission.mode.acceptEdits': '自动接受编辑',
+  'permission.mode.bypassPermissions': '跳过所有',
+
   // Message
   'message.copy': '复制',
   'message.copied': '已复制',
@@ -192,4 +202,5 @@ export const zhCN: Translations = {
   'shortcuts.toggleTheme': '切换主题',
   'shortcuts.copyLastResponse': '复制最后回复',
   'shortcuts.scrollToBottom': '滚动到底部',
+  'shortcuts.cyclePermissionMode': '切换权限模式',
 };

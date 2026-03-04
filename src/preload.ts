@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from './shared/ipc';
 import type { Session, StreamEvent, AppConfig, Workspace, WorkspaceData, Skill, SkillExecuteResult, QuestionRequest, QuestionAnswer, Todo, ImagePart } from './shared/types';
 import type { MCPConfig, MCPServerStatus, LayeredMCPConfig } from './shared/mcp-types';
+import type { PermissionMode, PermissionRequest, PermissionDecision, PermissionConfig, LayeredPermissionConfig } from './shared/permission-types';
 
 const api = {
   platform: process.platform,
@@ -181,6 +182,24 @@ const api = {
         ipcRenderer.removeListener(IPC_CHANNELS.TODO_UPDATE, handler);
       };
     },
+  },
+
+  permission: {
+    respond: (requestId: string, decision: PermissionDecision): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.PERMISSION_RESPOND, requestId, decision),
+    onAsk: (callback: (request: PermissionRequest) => void) => {
+      const handler = (_event: unknown, data: PermissionRequest) => callback(data);
+      ipcRenderer.on(IPC_CHANNELS.PERMISSION_ASK, handler);
+      return () => {
+        ipcRenderer.removeListener(IPC_CHANNELS.PERMISSION_ASK, handler);
+      };
+    },
+    setMode: (mode: PermissionMode): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.PERMISSION_SET_MODE, mode),
+    getConfig: (): Promise<LayeredPermissionConfig> =>
+      ipcRenderer.invoke(IPC_CHANNELS.PERMISSION_GET_CONFIG),
+    saveConfig: (scope: string, config: PermissionConfig): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.PERMISSION_SAVE_CONFIG, scope, config),
   },
 
   menu: {
