@@ -22,10 +22,14 @@ No browser tabs. No copy-paste. Open a folder and start building.
 - **Direct file operations** — The agent reads, writes, searches, and edits files in your workspace. Not suggestions — actual changes.
 - **Shell execution** — Run commands, see output, diagnose errors, fix them in the same conversation.
 - **Extended thinking** — Watch the agent reason step-by-step before making changes.
+- **Tool permissions** — Control what the agent can do. Review file edits with inline diff previews before approving. Choose between default, accept-edits, or full-bypass modes.
+- **Image support** — Attach images to your messages for visual context.
 - **MCP support** — Plug in any [Model Context Protocol](https://modelcontextprotocol.io) server for extra capabilities. Global + per-project config.
-- **Custom skills** — Reusable markdown prompt templates. Drop into `.manong/skills/` or `~/.config/manong/skills/`, trigger from command palette.
-- **Rich rendering** — Syntax highlighting, LaTeX math, Mermaid diagrams.
+- **Custom skills** — Reusable markdown prompt templates. Drop into `.manong/skills/` or `~/.config/manong/skills/`, trigger with slash commands in the chat input.
+- **Rich rendering** — Syntax highlighting, LaTeX math, Mermaid diagrams, inline diffs.
 - **Task tracking** — Built-in todo lists for multi-step work.
+- **Keyboard shortcuts** — Navigate views, toggle sidebar, manage sessions without touching the mouse.
+- **i18n** — English and Chinese UI with automatic locale detection.
 - **Workspace-centric** — Sessions, configs, and skills are all scoped to your project directory.
 
 ## How is this different?
