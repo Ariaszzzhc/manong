@@ -8,6 +8,8 @@
 
 ---
 
+> **Warning:** This project is under rapid development. APIs, tool names, and internal structures may change without notice. **Not recommended for production use.**
+
 <!-- TODO: replace with actual screenshot -->
 <!-- ![Manong screenshot](docs/screenshot.png) -->
 

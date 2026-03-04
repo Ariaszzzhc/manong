@@ -5,10 +5,11 @@ export type ToolRiskLevel = 'read' | 'write' | 'execute';
 export const BUILTIN_TOOL_RISK: Record<string, ToolRiskLevel> = {
   read_file: 'read',
   list_dir: 'read',
-  search_file: 'read',
+  glob: 'read',
+  grep: 'read',
   write_file: 'write',
   edit_file: 'write',
-  run_shell: 'execute',
+  bash: 'execute',
   skill: 'read',
   ask: 'read',
   todo: 'read',

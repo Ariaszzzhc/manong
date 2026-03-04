@@ -160,7 +160,7 @@ export class PermissionService {
 
   private toSpecifier(toolName: string, args: Record<string, unknown>): string {
     switch (toolName) {
-      case 'run_shell':
+      case 'bash':
         return `Bash(${args.command ?? ''})`;
       case 'write_file':
         return `Write(${args.file_path ?? ''})`;
@@ -175,8 +175,8 @@ export class PermissionService {
 
   private buildDescription(toolName: string, args: Record<string, unknown>): string {
     switch (toolName) {
-      case 'run_shell':
-        return `${args.command ?? ''}`;
+      case 'bash':
+        return `${args.description ?? args.command ?? ''}`;
       case 'write_file':
         return `Write to ${args.file_path ?? ''}`;
       case 'edit_file':

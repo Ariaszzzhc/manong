@@ -4,27 +4,43 @@ import { toolRegistry } from './registry';
 import { spawn } from 'child_process';
 import { createLogger } from '../logger';
 
-const log = createLogger('run_shell');
+const log = createLogger('bash');
 
-const RunShellSchema = z.object({
+const MAX_OUTPUT = 50000;
+const HALF_MAX = 25000;
+
+const BashSchema = z.object({
   command: z.string().describe('The shell command to execute'),
   timeout: z
     .number()
     .optional()
     .default(60000)
     .describe('Timeout in milliseconds (default 60s)'),
+  description: z
+    .string()
+    .optional()
+    .describe('Human-readable description of what the command does'),
 });
 
-export const runShellTool = defineTool({
-  name: 'run_shell',
+function truncateOutput(text: string): string {
+  if (text.length <= MAX_OUTPUT) return text;
+  const removed = text.length - HALF_MAX * 2;
+  return (
+    text.slice(0, HALF_MAX) +
+    `\n\n... [truncated ${removed} characters] ...\n\n` +
+    text.slice(-HALF_MAX)
+  );
+}
+
+export const bashTool = defineTool({
+  name: 'bash',
   description:
-    'Execute a shell command. Use with caution. Returns stdout and stderr.',
-  parameters: RunShellSchema,
+    'Execute a shell command. Returns stdout, stderr, and exit code. Use with caution.',
+  parameters: BashSchema,
   execute: async (
-    params: z.infer<typeof RunShellSchema>,
+    params: z.infer<typeof BashSchema>,
     context: ToolContext
   ) => {
-    // Validate command parameter
     if (!params.command || params.command.trim() === '') {
       return {
         success: false,
@@ -53,12 +69,16 @@ export const runShellTool = defineTool({
       });
 
       proc.on('close', (code) => {
-        const output =
-          stdout + (stderr ? `\n[stderr]\n${stderr}` : '');
+        const exitCode = code ?? 1;
+        let output = `[exit code: ${exitCode}]\n`;
+        output += truncateOutput(stdout);
+        if (stderr) {
+          output += `\n[stderr]\n${truncateOutput(stderr)}`;
+        }
         resolve({
-          success: code === 0,
-          output: output || `Process exited with code ${code}`,
-          error: code !== 0 ? `Exit code: ${code}` : undefined,
+          success: exitCode === 0,
+          output,
+          error: exitCode !== 0 ? `Exit code: ${exitCode}` : undefined,
         });
       });
 
@@ -74,4 +94,4 @@ export const runShellTool = defineTool({
   },
 });
 
-toolRegistry.register(runShellTool);
+toolRegistry.register(bashTool);

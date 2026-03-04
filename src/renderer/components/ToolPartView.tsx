@@ -80,12 +80,17 @@ const generateActionSummary = (
       return { summary: tf(t['tool.list'], { name: dirName }), icon: FolderOpen };
     }
 
-    case 'search_file': {
+    case 'glob': {
       const pattern = String(args.pattern || '');
       return { summary: tf(t['tool.search'], { pattern }), icon: Search };
     }
 
-    case 'run_shell': {
+    case 'grep': {
+      const pattern = String(args.pattern || '');
+      return { summary: tf(t['tool.search'], { pattern }), icon: Search };
+    }
+
+    case 'bash': {
       const command = String(args.command || '');
       const displayCommand = command.length > 40 ? command.slice(0, 40) + '...' : command;
       return { summary: tf(t['tool.run'], { command: displayCommand }), icon: Terminal };

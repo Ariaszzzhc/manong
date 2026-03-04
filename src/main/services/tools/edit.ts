@@ -57,11 +57,21 @@ export const editFileTool = defineTool({
 
       const content = await fs.readFile(filePath, 'utf-8');
 
-      if (!content.includes(params.old_string)) {
+      const occurrences = content.split(params.old_string).length - 1;
+
+      if (occurrences === 0) {
         return {
           success: false,
           output: `Error: Text not found in file: "${params.old_string.slice(0, 50)}..."`,
           error: `Text not found in file`,
+        };
+      }
+
+      if (occurrences > 1 && !params.replace_all) {
+        return {
+          success: false,
+          output: `Error: old_string matches ${occurrences} locations in the file. Either provide more surrounding context to make old_string unique, or set replace_all=true to replace all occurrences.`,
+          error: 'Ambiguous edit: multiple matches',
         };
       }
 

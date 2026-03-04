@@ -5,6 +5,7 @@ import './write';
 import './edit';
 import './list-dir';
 import './search';
+import './grep';
 import './shell';
 import './skill';
 import './ask';

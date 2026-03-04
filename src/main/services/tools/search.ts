@@ -2,28 +2,63 @@ import { z } from 'zod';
 import { defineTool, type ToolContext } from '../../../shared/tool';
 import { toolRegistry } from './registry';
 import { glob } from 'glob';
+import * as fs from 'fs/promises';
 import * as path from 'path';
 import { createLogger } from '../logger';
 
-const log = createLogger('search_file');
+const log = createLogger('glob');
 
-const SearchFileSchema = z.object({
-  pattern: z.string().describe('Glob pattern to search for files'),
+const DEFAULT_IGNORE = [
+  '**/node_modules/**',
+  '**/.git/**',
+  '**/dist/**',
+  '**/build/**',
+  '**/__pycache__/**',
+  '**/.next/**',
+];
+
+const GlobSchema = z.object({
+  pattern: z
+    .string()
+    .describe('Glob pattern to match files (e.g. "**/*.ts", "src/**/*.tsx")'),
   path: z
     .string()
     .optional()
     .describe('Directory to search in (defaults to working directory)'),
+  max_results: z
+    .number()
+    .optional()
+    .describe('Maximum number of results (default 200)'),
 });
 
-export const searchFileTool = defineTool({
-  name: 'search_file',
-  description: 'Search for files matching a glob pattern.',
-  parameters: SearchFileSchema,
+async function loadGitignore(dir: string): Promise<string[]> {
+  try {
+    const content = await fs.readFile(path.join(dir, '.gitignore'), 'utf-8');
+    return content
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith('#'))
+      .map((pattern) => {
+        if (pattern.startsWith('/')) pattern = pattern.slice(1);
+        if (!pattern.includes('/') && !pattern.startsWith('*')) {
+          return `**/${pattern}/**`;
+        }
+        return pattern.endsWith('/') ? `${pattern}**` : pattern;
+      });
+  } catch {
+    return [];
+  }
+}
+
+export const globTool = defineTool({
+  name: 'glob',
+  description:
+    'Search for files matching a glob pattern. Returns matching file paths sorted by modification time (newest first).',
+  parameters: GlobSchema,
   execute: async (
-    params: z.infer<typeof SearchFileSchema>,
+    params: z.infer<typeof GlobSchema>,
     context: ToolContext
   ) => {
-    // Validate pattern parameter
     if (!params.pattern || params.pattern.trim() === '') {
       return {
         success: false,
@@ -39,9 +74,13 @@ export const searchFileTool = defineTool({
           : path.join(context.workingDir, params.path)
         : context.workingDir;
 
+      const gitignorePatterns = await loadGitignore(searchPath);
+      const ignoreList = [...DEFAULT_IGNORE, ...gitignorePatterns];
+
       const files = await glob(params.pattern, {
         cwd: searchPath,
         nodir: true,
+        ignore: ignoreList,
       });
 
       if (files.length === 0) {
@@ -51,9 +90,31 @@ export const searchFileTool = defineTool({
         };
       }
 
+      const withStats = await Promise.all(
+        files.map(async (file) => {
+          try {
+            const stat = await fs.stat(path.join(searchPath, file));
+            return { file, mtime: stat.mtimeMs };
+          } catch {
+            return { file, mtime: 0 };
+          }
+        })
+      );
+
+      withStats.sort((a, b) => b.mtime - a.mtime);
+
+      const limit = params.max_results ?? 200;
+      const truncated = withStats.length > limit;
+      const result = withStats.slice(0, limit).map((s) => s.file);
+
+      let output = result.join('\n');
+      if (truncated) {
+        output += `\n\n... (${withStats.length - limit} more files not shown)`;
+      }
+
       return {
         success: true,
-        output: files.slice(0, 100).join('\n'),
+        output,
       };
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
@@ -67,4 +128,4 @@ export const searchFileTool = defineTool({
   },
 });
 
-toolRegistry.register(searchFileTool);
+toolRegistry.register(globTool);

@@ -84,7 +84,7 @@ src/
 
 Tools use a dual-source registry pattern (`src/main/services/tools/registry.ts`):
 
-**Builtin tools (9):** `read_file`, `write_file`, `edit_file`, `list_dir`, `search_file`, `run_shell`, `skill`, `ask`, `todo`
+**Builtin tools (10):** `read_file`, `write_file`, `edit_file`, `list_dir`, `glob`, `grep`, `bash`, `skill`, `ask`, `todo`
 
 **MCP tools:** Dynamically registered from connected MCP servers via `tool-adapter.ts`
 
@@ -107,7 +107,7 @@ toolRegistry.register(myTool);
 
 `src/main/services/permission/` enforces tool permissions before execution:
 
-- **Risk levels:** `read` (read_file, list_dir, search_file, skill, ask, todo), `write` (write_file, edit_file), `execute` (run_shell, MCP tools)
+- **Risk levels:** `read` (read_file, list_dir, glob, grep, skill, ask, todo), `write` (write_file, edit_file), `execute` (bash, MCP tools)
 - **Permission modes:** `default` (prompt for write/execute), `acceptEdits` (auto-allow writes), `bypassPermissions` (allow all)
 - **Layered config:** global + project + local configs merged, with per-tool rules (allow/deny patterns)
 - **Decisions:** `allow`, `deny`, `always-allow` — user responds via `PermissionCard` in the UI
