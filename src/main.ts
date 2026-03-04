@@ -85,7 +85,7 @@ const createWindow = async () => {
     minHeight: 600,
     frame: isMac ? undefined : false,
     ...(isMac
-      ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 16, y: 16 } }
+      ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 16, y: 12 } }
       : {}),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
