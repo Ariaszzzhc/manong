@@ -104,7 +104,11 @@ const AssistantTextBlock: React.FC<{ text: string; isStreaming?: boolean }> = ({
               const codeString = extractText(codeElement.props.children).replace(/\n$/, '');
 
               if (lang === 'mermaid') {
-                return <MermaidBlock code={codeString} />;
+                // An unclosed fenced code block extends to end-of-document in CommonMark.
+                // If the source text ends with the code content, the closing ``` hasn't arrived yet.
+                const isBlockIncomplete = isStreaming &&
+                  (!codeString.trim() || text.trimEnd().endsWith(codeString.trimEnd()));
+                return <MermaidBlock code={codeString} isStreaming={isBlockIncomplete} />;
               }
 
               return <CodeBlock code={codeString} language={lang} />;
