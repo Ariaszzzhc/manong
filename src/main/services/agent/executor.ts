@@ -4,6 +4,7 @@ import { DEFAULT_TOKEN_USAGE } from '../../../shared/types';
 import type { ToolContext } from '../../../shared/tool';
 import { AnthropicProvider } from '../provider/anthropic';
 import { toolRegistry } from '../tools';
+import { microCompact, estimateTokens, fullCompact, TOKEN_THRESHOLD } from './compact';
 import type { PermissionService } from '../permission/service';
 import { createLogger } from '../logger';
 
@@ -39,9 +40,11 @@ export class AgentExecutor {
   private isPaused = false;
   private pauseResolver: (() => void) | null = null;
   private permissionService: PermissionService | null;
+  private providerConfig: ProviderConfig;
 
   constructor(config: ExecutorConfig) {
     this.provider = new AnthropicProvider(config.provider);
+    this.providerConfig = config.provider;
     this.systemPrompt = config.systemPrompt;
     this.allowedTools = config.allowedTools || [];
     this.workingDir = config.workingDir;
@@ -119,7 +122,25 @@ export class AgentExecutor {
     }
 
     try {
-      const stream = this.provider.stream(messages, effectiveTools, systemPrompt);
+      // Layer 1: Micro-compact (clone messages for API, originals unchanged)
+      const { messages: apiMessages, replacedCount } = microCompact(messages);
+      if (replacedCount > 0) {
+        log.info(`Micro-compact: replaced ${replacedCount} old tool results`);
+        onEvent?.({ type: 'compact', sessionId: this.sessionId, messageId: '', compactType: 'micro', compactInfo: `Replaced ${replacedCount} old tool results` });
+      }
+
+      // Layer 2: Auto-compact (when tokens exceed threshold, replace messages in-place)
+      let messagesForApi = apiMessages;
+      if (estimateTokens(messagesForApi) > TOKEN_THRESHOLD) {
+        log.info('Auto-compact triggered: token estimate exceeds threshold');
+        const result = await fullCompact(messages, this.workingDir, this.providerConfig);
+        messages.length = 0;
+        messages.push(...result.messages);
+        messagesForApi = [...result.messages];
+        onEvent?.({ type: 'compact', sessionId: this.sessionId, messageId: '', compactType: 'auto', compactInfo: `Transcript saved to ${result.transcriptPath}`, messages: result.messages });
+      }
+
+      const stream = this.provider.stream(messagesForApi, effectiveTools, systemPrompt);
 
       for await (const event of stream) {
         if (this.abortController?.signal.aborted) {

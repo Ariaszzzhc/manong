@@ -355,6 +355,17 @@ export const useAppStore = create<AppState>((set, get) => ({
           ),
         });
       }
+    } else if (event.type === 'compact') {
+      if ((event.compactType === 'auto' || event.compactType === 'manual') && event.messages) {
+        const compactedMessages = event.messages;
+        set((s) => ({
+          currentSession: s.currentSession ? {
+            ...s.currentSession,
+            messages: compactedMessages,
+          } : null,
+          pendingMessages: [],
+        }));
+      }
     } else if (event.type === 'error') {
       set({
         isStreaming: false,

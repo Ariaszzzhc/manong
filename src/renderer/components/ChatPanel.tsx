@@ -47,6 +47,7 @@ export const ChatPanel: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const shouldAutoScrollRef = useRef(true);
   const rafRef = useRef<number | undefined>(undefined);
+  const compactAbortRef = useRef(false);
 
   // Slash command autocomplete: show menu when input starts with `/` and has no space yet
   const slashFilter = useMemo(() => {
@@ -237,6 +238,40 @@ export const ChatPanel: React.FC = () => {
     }
 
     const trimmedInput = input.trim();
+
+    // Handle /compact command (user-triggered context compression)
+    const compactMatch = trimmedInput.match(/^\/compact(?:\s+(.*))?$/);
+    if (compactMatch) {
+      const focus = compactMatch[1]?.trim();
+      setInput('');
+      compactAbortRef.current = false;
+      startStreaming();
+      const result = await window.manong.session.compact(session.id, currentWorkspace.path, focus || undefined);
+      if (compactAbortRef.current) return;
+      if (result.success && result.messages) {
+        const updatedSession = {
+          ...session,
+          messages: result.messages,
+          updatedAt: Date.now(),
+        };
+        updateSession(updatedSession);
+
+        const providerConfig = config?.providers.find(
+          (p) => p.name === config.defaultProvider
+        );
+
+        window.manong.agent.start(
+          session.id,
+          'Continue where you left off.',
+          providerConfig,
+          currentWorkspace.path
+        );
+      } else {
+        useAppStore.getState().stopStreaming();
+      }
+      return;
+    }
+
     const slashMatch = trimmedInput.match(SLASH_COMMAND_PATTERN);
 
     if (slashMatch && attachments.length === 0) {
@@ -363,6 +398,7 @@ export const ChatPanel: React.FC = () => {
   };
 
   const handleStop = () => {
+    compactAbortRef.current = true;
     window.manong.agent.stop();
     useAppStore.getState().stopStreaming();
   };

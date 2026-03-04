@@ -13,6 +13,7 @@ import { AgentLoop } from '../services/agent/loop';
 import { storageService } from '../services/storage';
 import { skillService } from '../services/skill';
 import { mcpManager } from '../services/mcp';
+import { fullCompact } from '../services/agent/compact';
 import {
   setQuestionWindow,
   resolveQuestion,
@@ -347,6 +348,38 @@ export function setupIPC(mainWindow: BrowserWindow): void {
     IPC_CHANNELS.PERMISSION_SAVE_CONFIG,
     async (_event, scope: string, config: PermissionConfig) => {
       await permissionService.saveConfig(scope, config);
+    }
+  );
+
+  // =====================
+  // Context Compact
+  // =====================
+
+  ipcMain.handle(
+    IPC_CHANNELS.SESSION_COMPACT,
+    async (_event, sessionId: string, workspacePath: string, focus?: string) => {
+      const session = storageService.getSession(workspacePath, sessionId);
+      if (!session || session.messages.length === 0) {
+        return { success: false, error: 'No session or empty conversation' };
+      }
+
+      const config = storageService.getConfig();
+      const providerName = config.defaultProvider;
+      const providerConfig = config.providers.find(p => p.name === providerName);
+      if (!providerConfig) {
+        return { success: false, error: 'No provider configured' };
+      }
+
+      const result = await fullCompact(session.messages, workspacePath, providerConfig, focus);
+      session.messages = result.messages;
+      session.updatedAt = Date.now();
+      storageService.saveSession(workspacePath, session);
+
+      return {
+        success: true,
+        messages: result.messages,
+        transcriptPath: result.transcriptPath,
+      };
     }
   );
 }

@@ -137,7 +137,7 @@ ${skillList}
 </available_skills>
 
 Usage:
-- name: The name of the skill to load (e.g., "init", "compress")`
+- name: The name of the skill to load (e.g., "init", "compact")`
   }
 }
 

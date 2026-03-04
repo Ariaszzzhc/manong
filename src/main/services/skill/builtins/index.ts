@@ -1,10 +1,10 @@
 import type { Skill } from '../../../../shared/types';
 import { initSkill } from './init';
-import { compressSkill } from './compress';
+import { compactSkill } from './compact';
 
 export const builtinSkills: Skill[] = [
   initSkill,
-  compressSkill,
+  compactSkill,
 ];
 
 export function getBuiltinSkill(name: string): Skill | undefined {

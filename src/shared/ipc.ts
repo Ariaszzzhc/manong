@@ -66,4 +66,7 @@ export const IPC_CHANNELS = {
   PERMISSION_GET_CONFIG: 'permission:get-config',
   PERMISSION_SAVE_CONFIG: 'permission:save-config',
   PERMISSION_SET_MODE: 'permission:set-mode',
+
+  // Compact
+  SESSION_COMPACT: 'session:compact',
 } as const;

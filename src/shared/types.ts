@@ -70,6 +70,7 @@ export interface UserMessage {
   role: 'user';
   parts: Part[];
   createdAt: number;
+  hidden?: boolean;
 }
 
 export interface AssistantMessage {
@@ -77,6 +78,7 @@ export interface AssistantMessage {
   role: 'assistant';
   parts: Part[];
   createdAt: number;
+  hidden?: boolean;
 }
 
 export type Message = UserMessage | AssistantMessage;
@@ -115,7 +117,8 @@ export type StreamEventType =
   | 'message-continue'
   | 'message-complete'
   | 'usage'
-  | 'error';
+  | 'error'
+  | 'compact';
 
 export interface StreamEvent {
   type: StreamEventType;
@@ -136,6 +139,10 @@ export interface StreamEvent {
   lastUsage?: TokenUsage;
   // For error
   error?: string;
+  // For compact
+  compactType?: 'micro' | 'auto' | 'manual';
+  compactInfo?: string;
+  messages?: Message[];
 }
 
 // Provider configuration

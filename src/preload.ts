@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from './shared/ipc';
-import type { Session, StreamEvent, AppConfig, Workspace, WorkspaceData, Skill, SkillExecuteResult, QuestionRequest, QuestionAnswer, Todo, ImagePart } from './shared/types';
+import type { Session, StreamEvent, AppConfig, Workspace, WorkspaceData, Skill, SkillExecuteResult, QuestionRequest, QuestionAnswer, Todo, ImagePart, Message } from './shared/types';
 import type { MCPConfig, MCPServerStatus, LayeredMCPConfig } from './shared/mcp-types';
 import type { PermissionMode, PermissionRequest, PermissionDecision, PermissionConfig, LayeredPermissionConfig } from './shared/permission-types';
 
@@ -68,6 +68,9 @@ const api = {
     },
     update: (session: Session): Promise<Session> => {
       return ipcRenderer.invoke(IPC_CHANNELS.SESSION_UPDATE, session);
+    },
+    compact: (sessionId: string, workspacePath: string, focus?: string): Promise<{ success: boolean; messages?: Message[]; transcriptPath?: string; error?: string }> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.SESSION_COMPACT, sessionId, workspacePath, focus);
     },
   },
 

@@ -36,6 +36,7 @@ export function messagesToTimeline(
   const streamingId = streamingMessage?.id;
 
   for (const msg of allMessages) {
+    if (msg.hidden) continue;
     const msgIsStreaming = isStreaming && msg.id === streamingId;
 
     if (msg.role === 'user') {
