@@ -92,6 +92,8 @@ export interface Session {
   tokenUsage: TokenUsage;
   lastUsage?: TokenUsage;
   todos?: Todo[];
+  parentSessionId?: string;
+  agentType?: string;
 }
 
 // Workspace - represents a working directory context
@@ -214,4 +216,29 @@ export interface Todo {
   content: string;
   status: TodoStatus;
   priority: TodoPriority;
+}
+
+export type AgentMode = 'primary' | 'subagent';
+
+export interface AgentType {
+  name: string;
+  description: string;
+  mode: AgentMode;
+  prompt?: string;
+  allowedTools?: string[];
+  deniedTools?: string[];
+  model?: string;
+  color?: string;
+}
+
+export interface TaskToolParams {
+  description: string;
+  prompt: string;
+  subagent_type: string;
+  task_id?: string;
+}
+
+export interface TaskToolResult {
+  taskId: string;
+  summary: string;
 }
