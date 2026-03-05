@@ -392,10 +392,37 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   stopStreaming: () =>
-    set({
-      isStreaming: false,
-      pendingMessages: [],
-      streamingMessage: null,
+    set((state) => {
+      const pending = [...state.pendingMessages];
+      if (state.streamingMessage && state.streamingMessage.parts.length > 0) {
+        pending.push(state.streamingMessage);
+      }
+
+      if (!state.currentSession || pending.length === 0) {
+        return {
+          isStreaming: false,
+          pendingMessages: [],
+          streamingMessage: null,
+        };
+      }
+
+      const updatedSession = {
+        ...state.currentSession,
+        messages: [...state.currentSession.messages, ...pending],
+        updatedAt: Date.now(),
+      };
+
+      window.manong.session.update(updatedSession);
+
+      return {
+        isStreaming: false,
+        pendingMessages: [],
+        streamingMessage: null,
+        currentSession: updatedSession,
+        sessions: state.sessions.map((s) =>
+          s.id === updatedSession.id ? updatedSession : s
+        ),
+      };
     }),
 
   // =====================

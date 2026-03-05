@@ -3,6 +3,8 @@ import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { setupIPC } from './main/ipc';
 import { mcpManager } from './main/services/mcp';
+import { lspManager } from './main/services/lsp';
+import { storageService } from './main/services/storage';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -120,6 +122,14 @@ const createWindow = async () => {
     await mcpManager.connectAll();
   } catch (error) {
     console.error('Failed to initialize MCP:', error);
+  }
+
+  // Initialize LSP manager
+  try {
+    const currentWorkspacePath = storageService.getCurrentWorkspacePath();
+    await lspManager.initialize(currentWorkspacePath || undefined);
+  } catch (error) {
+    console.error('Failed to initialize LSP:', error);
   }
 };
 

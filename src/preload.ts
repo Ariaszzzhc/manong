@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from './shared/ipc';
 import type { Session, StreamEvent, AppConfig, Workspace, WorkspaceData, Skill, SkillExecuteResult, QuestionRequest, QuestionAnswer, Todo, ImagePart, Message } from './shared/types';
 import type { MCPConfig, MCPServerStatus, LayeredMCPConfig } from './shared/mcp-types';
+import type { LSPServerStatus } from './shared/lsp-types';
 import type { PermissionMode, PermissionRequest, PermissionDecision, PermissionConfig, LayeredPermissionConfig } from './shared/permission-types';
 
 const api = {
@@ -218,6 +219,22 @@ const api = {
       ipcRenderer.on('menu:open-folder', handler);
       return () => {
         ipcRenderer.removeListener('menu:open-folder', handler);
+      };
+    },
+  },
+
+  lsp: {
+    getStatus: (): Promise<LSPServerStatus[]> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.LSP_GET_STATUS);
+    },
+    setWorkspace: (workspacePath: string | null): Promise<void> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.LSP_SET_WORKSPACE, workspacePath);
+    },
+    onStatusChanged: (callback: (statuses: LSPServerStatus[]) => void) => {
+      const handler = (_event: unknown, statuses: LSPServerStatus[]) => callback(statuses);
+      ipcRenderer.on(IPC_CHANNELS.LSP_STATUS_CHANGED, handler);
+      return () => {
+        ipcRenderer.removeListener(IPC_CHANNELS.LSP_STATUS_CHANGED, handler);
       };
     },
   },

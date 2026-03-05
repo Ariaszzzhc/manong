@@ -15,12 +15,22 @@ export function setTodoWindow(window: BrowserWindow): void {
   mainWindow = window;
 }
 
+const MAX_TODOS = 100;
+const MAX_TODO_CONTENT_LENGTH = 1000;
+
+function normalizeTodoContent(content: string): string {
+  return content.replace(/\s+/g, ' ').trim();
+}
+
 const TodoWriteSchema = z.object({
   todos: z.array(z.object({
-    content: z.string().describe('Brief description of the task'),
+    content: z.string()
+      .min(1)
+      .max(MAX_TODO_CONTENT_LENGTH)
+      .describe('Brief description of the task'),
     status: z.enum(['pending', 'in_progress', 'completed']),
     priority: z.enum(['high', 'medium', 'low']),
-  })).describe('The updated todo list (full list, will replace existing todos)'),
+  })).max(MAX_TODOS).describe('The updated todo list (full list, will replace existing todos)'),
 });
 
 const TodoReadSchema = z.object({});
@@ -71,11 +81,25 @@ Usage notes:
       }
 
       // Update todos
-      const todos: Todo[] = params.todos.map(t => ({
-        content: t.content,
-        status: t.status as TodoStatus,
-        priority: t.priority as TodoPriority,
-      }));
+      const todos: Todo[] = [];
+      for (let i = 0; i < params.todos.length; i++) {
+        const t = params.todos[i];
+        const normalizedContent = normalizeTodoContent(t.content);
+
+        if (!normalizedContent) {
+          return {
+            success: false,
+            output: `Error: Todo #${i + 1} content cannot be empty after normalization`,
+            error: 'Invalid todo content',
+          };
+        }
+
+        todos.push({
+          content: normalizedContent,
+          status: t.status as TodoStatus,
+          priority: t.priority as TodoPriority,
+        });
+      }
 
       session.todos = todos;
       storageService.saveSession(workingDir, session);

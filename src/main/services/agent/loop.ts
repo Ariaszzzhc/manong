@@ -82,6 +82,7 @@ Supported Mermaid diagram types:
 - For editing files, use \`edit_file\` for targeted changes (NOT write_file for small edits)
 - For writing new files or full rewrites, use \`write_file\`
 - For listing directories, use \`list_dir\` (NOT bash with ls)
+- For semantic code intelligence (type information, definitions, references, symbols), use \`lsp\` tool
 - Reserve \`bash\` exclusively for system commands and operations that require shell execution
 - You can call multiple tools in a single response for independent operations
 
@@ -161,16 +162,17 @@ export class AgentLoop {
       .replace('{{DATE}}', new Date().toDateString())
       .replace('{{MODEL}}', this.modelName);
 
-    this.executor = new AgentExecutor({
+    const executor = new AgentExecutor({
       provider: this.provider,
       systemPrompt,
       workingDir: this.workingDir,
       sessionId: session.id,
       permissionService,
     });
+    this.executor = executor;
 
     try {
-      const result = await this.executor.execute(session.messages, onEvent);
+      const result = await executor.execute(session.messages, onEvent);
 
       session.messages.length = 0;
       session.messages.push(...result.messages);
@@ -186,13 +188,16 @@ export class AgentLoop {
         messageId: '',
         error: errorMessage,
       });
+    } finally {
+      if (this.executor === executor) {
+        this.executor = null;
+      }
     }
   }
 
   stop(): void {
     if (this.executor) {
       this.executor.abort();
-      this.executor = null;
     }
     cancelPendingQuestions();
     permissionService.cancelPendingPermissions();

@@ -37,6 +37,7 @@ export class AgentExecutor {
   private maxSteps: number;
   private stepCount = 0;
   private abortController: AbortController | null = null;
+  private abortRequested = false;
   private isPaused = false;
   private pauseResolver: (() => void) | null = null;
   private permissionService: PermissionService | null;
@@ -59,12 +60,17 @@ export class AgentExecutor {
     onEvent?: (event: StreamEvent) => void
   ): Promise<ExecutorResult> {
     this.abortController = new AbortController();
+    this.abortRequested = false;
     this.stepCount = 0;
 
     const tokenUsage: TokenUsage = { ...DEFAULT_TOKEN_USAGE };
     const allMessages = [...messages];
 
-    await this.processResponse(allMessages, tokenUsage, onEvent);
+    try {
+      await this.processResponse(allMessages, tokenUsage, onEvent);
+    } finally {
+      this.abortController = null;
+    }
 
     const lastAssistantMsg = [...allMessages].reverse().find(m => m.role === 'assistant');
     const finalText = lastAssistantMsg?.parts
@@ -143,11 +149,15 @@ export class AgentExecutor {
       const stream = this.provider.stream(messagesForApi, effectiveTools, systemPrompt);
 
       for await (const event of stream) {
-        if (this.abortController?.signal.aborted) {
+        if (this.abortRequested || this.abortController?.signal.aborted) {
           break;
         }
 
         await this.waitForResume();
+
+        if (this.abortRequested || this.abortController?.signal.aborted) {
+          break;
+        }
 
         if (event.type === 'text-delta') {
           currentText += event.delta;
@@ -205,10 +215,28 @@ export class AgentExecutor {
         }
       }
 
+      const aborted = this.abortRequested || this.abortController?.signal.aborted;
+      if (aborted) {
+        if (assistantMsg.parts.length > 0) {
+          messages.push(assistantMsg);
+        }
+
+        onEvent?.({
+          type: 'message-complete',
+          sessionId: this.sessionId,
+          messageId: assistantMsgId,
+        });
+        return;
+      }
+
       if (toolCalls.length > 0) {
         messages.push(assistantMsg);
 
         for (const tc of toolCalls) {
+          if (this.abortRequested || this.abortController?.signal.aborted) {
+            break;
+          }
+
           const tool = toolRegistry.get(tc.toolName);
           if (!tool) {
             const result = `Tool "${tc.toolName}" not found`;
@@ -286,6 +314,15 @@ export class AgentExecutor {
             });
             this.addToolResult(messages, tc.toolCallId, tc.toolName, errorMessage, true);
           }
+        }
+
+        if (this.abortRequested || this.abortController?.signal.aborted) {
+          onEvent?.({
+            type: 'message-complete',
+            sessionId: this.sessionId,
+            messageId: assistantMsgId,
+          });
+          return;
         }
 
         await this.processResponse(messages, tokenUsage, onEvent, true);
@@ -381,9 +418,9 @@ export class AgentExecutor {
   }
 
   abort() {
+    this.abortRequested = true;
     if (this.abortController) {
       this.abortController.abort();
-      this.abortController = null;
     }
   }
 

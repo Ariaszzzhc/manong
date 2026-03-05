@@ -8,11 +8,13 @@ import type {
   ImagePart,
 } from '../../shared/types';
 import type { MCPConfig, MCPServerStatus, LayeredMCPConfig } from '../../shared/mcp-types';
+import type { LSPServerStatus } from '../../shared/lsp-types';
 import type { PermissionMode, PermissionConfig, PermissionDecision } from '../../shared/permission-types';
 import { AgentLoop } from '../services/agent/loop';
 import { storageService } from '../services/storage';
 import { skillService } from '../services/skill';
 import { mcpManager } from '../services/mcp';
+import { lspManager } from '../services/lsp';
 import { fullCompact } from '../services/agent/compact';
 import {
   setQuestionWindow,
@@ -63,6 +65,9 @@ export function setupIPC(mainWindow: BrowserWindow): void {
     // Set workspace for MCP manager to load project-specific config
     await mcpManager.setWorkspace(path);
 
+    // Set workspace for LSP manager
+    await lspManager.setWorkspace(path);
+
     // Load permission config for workspace
     await permissionService.load(path);
 
@@ -82,6 +87,9 @@ export function setupIPC(mainWindow: BrowserWindow): void {
 
     // Set workspace for MCP manager to load project-specific config
     await mcpManager.setWorkspace(path);
+
+    // Set workspace for LSP manager
+    await lspManager.setWorkspace(path);
 
     // Load permission config for workspace
     await permissionService.load(path);
@@ -166,7 +174,9 @@ export function setupIPC(mainWindow: BrowserWindow): void {
       }
 
       agentLoop.start(session, workspacePath, message, images, (event: StreamEvent) => {
-        mainWindow.webContents.send(IPC_CHANNELS.AGENT_STREAM, event);
+        if (!mainWindow.isDestroyed()) {
+          mainWindow.webContents.send(IPC_CHANNELS.AGENT_STREAM, event);
+        }
       });
     }
   );
@@ -315,11 +325,15 @@ export function setupIPC(mainWindow: BrowserWindow): void {
   });
 
   ipcMain.on(IPC_CHANNELS.MCP_STATUS_CHANGED, (_event, statuses: MCPServerStatus[]) => {
-    mainWindow.webContents.send(IPC_CHANNELS.MCP_STATUS_CHANGED, statuses);
+    if (!mainWindow.isDestroyed()) {
+      mainWindow.webContents.send(IPC_CHANNELS.MCP_STATUS_CHANGED, statuses);
+    }
   });
 
   mcpManager.onStatusChange((statuses) => {
-    mainWindow.webContents.send(IPC_CHANNELS.MCP_STATUS_CHANGED, statuses);
+    if (!mainWindow.isDestroyed()) {
+      mainWindow.webContents.send(IPC_CHANNELS.MCP_STATUS_CHANGED, statuses);
+    }
   });
 
   // =====================
@@ -382,4 +396,22 @@ export function setupIPC(mainWindow: BrowserWindow): void {
       };
     }
   );
+
+  // =====================
+  // LSP (Language Server Protocol)
+  // =====================
+
+  ipcMain.handle(IPC_CHANNELS.LSP_GET_STATUS, async (): Promise<LSPServerStatus[]> => {
+    return lspManager.getStatuses();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.LSP_SET_WORKSPACE, async (_event, workspacePath: string | null): Promise<void> => {
+    await lspManager.setWorkspace(workspacePath);
+  });
+
+  lspManager.onStatusChange((statuses) => {
+    if (!mainWindow.isDestroyed()) {
+      mainWindow.webContents.send(IPC_CHANNELS.LSP_STATUS_CHANGED, statuses);
+    }
+  });
 }

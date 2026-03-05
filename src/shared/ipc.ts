@@ -69,4 +69,9 @@ export const IPC_CHANNELS = {
 
   // Compact
   SESSION_COMPACT: 'session:compact',
+
+  // LSP (Language Server Protocol)
+  LSP_GET_STATUS: 'lsp:get-status',
+  LSP_SET_WORKSPACE: 'lsp:set-workspace',
+  LSP_STATUS_CHANGED: 'lsp:status-changed',
 } as const;

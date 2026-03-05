@@ -103,6 +103,19 @@ export class PermissionService {
     return this.promptUser(toolName, args, riskLevel, specifier, sessionId, workingDir);
   }
 
+  checkSpecifierRules(specifier: string): 'allow' | 'deny' {
+    if (this.mode === 'bypassPermissions') {
+      return 'allow';
+    }
+
+    const ruleResult = this.evaluateRules(specifier);
+    if (ruleResult === 'deny') {
+      return 'deny';
+    }
+
+    return 'allow';
+  }
+
   resolvePermission(requestId: string, decision: PermissionDecision): void {
     const pending = this.pendingRequests.get(requestId);
     if (!pending) {

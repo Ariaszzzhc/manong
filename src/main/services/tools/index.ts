@@ -10,5 +10,6 @@ import './shell';
 import './skill';
 import './ask';
 import './todo';
+import './lsp';
 
 export { toolRegistry } from './registry';

@@ -13,6 +13,7 @@ export const BUILTIN_TOOL_RISK: Record<string, ToolRiskLevel> = {
   skill: 'read',
   ask: 'read',
   todo: 'read',
+  lsp: 'read',
 };
 
 export const DEFAULT_MCP_TOOL_RISK: ToolRiskLevel = 'execute';
