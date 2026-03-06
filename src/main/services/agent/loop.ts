@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { Anthropic } from '@anthropic-ai/sdk';
 import type {
   Session,
   Message,
@@ -212,6 +213,8 @@ export class AgentLoop {
       }
 
       storageService.saveSession(workingDir, session);
+
+      this.generateTitle(session, workingDir, onEvent);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       log.error('AgentLoop error:', errorMessage);
@@ -234,5 +237,59 @@ export class AgentLoop {
     }
     cancelPendingQuestions();
     permissionService.cancelPendingPermissions();
+  }
+
+  private generateTitle(
+    session: Session,
+    workingDir: string,
+    onEvent: (event: StreamEvent) => void
+  ): void {
+    if (session.title !== 'New Session') return;
+
+    const firstUserMsg = session.messages.find((m) => m.role === 'user');
+    if (!firstUserMsg) return;
+
+    const textPart = firstUserMsg.parts.find((p) => p.type === 'text');
+    if (!textPart || textPart.type !== 'text') return;
+
+    if (!this.provider) return;
+
+    const client = new Anthropic({
+      apiKey: this.provider.apiKey,
+      baseURL: this.provider.baseURL,
+    });
+
+    client.messages
+      .create({
+        model: this.provider.model,
+        max_tokens: 50,
+        messages: [
+          {
+            role: 'user',
+            content: `Generate a short title (max 6 words) for this conversation. Return ONLY the title, no quotes or punctuation at the end.\n\nUser message: ${textPart.text.slice(0, 500)}`,
+          },
+        ],
+      })
+      .then((response) => {
+        const block = response.content[0];
+        if (block.type !== 'text') return;
+
+        const title = block.text.trim().slice(0, 60);
+        if (!title) return;
+
+        session.title = title;
+        session.updatedAt = Date.now();
+        storageService.saveSession(workingDir, session);
+
+        onEvent({
+          type: 'title-update',
+          sessionId: session.id,
+          messageId: '',
+          title,
+        });
+      })
+      .catch((err) => {
+        log.error('Failed to generate title:', err);
+      });
   }
 }

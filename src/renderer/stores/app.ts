@@ -184,14 +184,16 @@ export const useAppStore = create<AppState>((set, get) => ({
       return;
     }
 
+    const firstParentSession = data.sessions.find(s => !s.parentSessionId) || null;
+
     set({
       currentWorkspace: data.workspace,
       currentWorkspacePath: data.workspace.path,
       sessions: data.sessions,
-      currentSession: data.sessions[0] || null,
-      currentSessionId: data.sessions[0]?.id || null,
-      todos: data.sessions[0]?.todos || [],
-      subagentInfos: data.sessions[0]?.subagentHistory || [],
+      currentSession: firstParentSession,
+      currentSessionId: firstParentSession?.id || null,
+      todos: firstParentSession?.todos || [],
+      subagentInfos: firstParentSession?.subagentHistory || [],
       viewingSubagentId: null,
       viewingSubagentSession: null,
       subagentPendingMessages: [],
@@ -424,21 +426,8 @@ export const useAppStore = create<AppState>((set, get) => ({
           pending.push(state.streamingMessage);
         }
 
-        let title = session.title;
-        if (session.title === 'New Session' && session.messages.length > 0) {
-          const firstUserMsg = session.messages.find((m) => m.role === 'user');
-          if (firstUserMsg) {
-            const textPart = firstUserMsg.parts.find((p) => p.type === 'text');
-            if (textPart && textPart.type === 'text') {
-              title = textPart.text.replace(/\n/g, ' ').slice(0, 30).trim();
-              if (textPart.text.length > 30) title += '...';
-            }
-          }
-        }
-
         const updatedSession = {
           ...session,
-          title,
           messages: [...session.messages, ...pending],
           updatedAt: Date.now(),
         };
@@ -453,6 +442,21 @@ export const useAppStore = create<AppState>((set, get) => ({
           sessions: state.sessions.map((s) =>
             s.id === updatedSession.id ? updatedSession : s
           ),
+        });
+      }
+    } else if (event.type === 'title-update') {
+      const title = event.title;
+      if (title) {
+        set((s) => {
+          const updated = s.currentSession && s.currentSession.id === event.sessionId
+            ? { ...s.currentSession, title }
+            : s.currentSession;
+          return {
+            currentSession: updated,
+            sessions: s.sessions.map((sess) =>
+              sess.id === event.sessionId ? { ...sess, title } : sess
+            ),
+          };
         });
       }
     } else if (event.type === 'compact') {

@@ -122,7 +122,8 @@ export type StreamEventType =
   | 'message-complete'
   | 'usage'
   | 'error'
-  | 'compact';
+  | 'compact'
+  | 'title-update';
 
 export interface StreamEvent {
   type: StreamEventType;
@@ -147,6 +148,8 @@ export interface StreamEvent {
   compactType?: 'micro' | 'auto' | 'manual';
   compactInfo?: string;
   messages?: Message[];
+  // For title-update
+  title?: string;
 }
 
 // Provider configuration
