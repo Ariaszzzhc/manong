@@ -150,6 +150,16 @@ export function setupIPC(mainWindow: BrowserWindow): void {
     if (!workspacePath) {
       throw new Error('No workspace selected');
     }
+
+    // Preserve subagentHistory from storage if not present in the incoming session,
+    // since the renderer's in-memory session may not have it
+    if (!session.subagentHistory) {
+      const stored = storageService.getSession(workspacePath, session.id);
+      if (stored?.subagentHistory) {
+        session.subagentHistory = stored.subagentHistory;
+      }
+    }
+
     storageService.saveSession(workspacePath, session);
     return session;
   });

@@ -60,7 +60,7 @@ interface AppState {
 
   // Session Actions
   setSessions: (sessions: Session[]) => void;
-  setCurrentSession: (session: Session | null) => void;
+  setCurrentSession: (session: Session | null) => Promise<void>;
   addSession: (session: Session) => void;
   ensureSession: () => Promise<Session>;
   updateSession: (session: Session) => void;
@@ -191,7 +191,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       currentSession: data.sessions[0] || null,
       currentSessionId: data.sessions[0]?.id || null,
       todos: data.sessions[0]?.todos || [],
-      subagentInfos: [],
+      subagentInfos: data.sessions[0]?.subagentHistory || [],
       viewingSubagentId: null,
       viewingSubagentSession: null,
       subagentPendingMessages: [],
@@ -223,12 +223,38 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   setSessions: (sessions) => set({ sessions }),
 
-  setCurrentSession: (session) =>
+  setCurrentSession: async (session) => {
+    if (!session) {
+      set({
+        currentSession: null,
+        currentSessionId: null,
+        todos: [],
+        subagentInfos: [],
+        viewingSubagentId: null,
+        viewingSubagentSession: null,
+        subagentPendingMessages: [],
+        subagentStreamingMessage: null,
+        subagentRuntimeBySession: {},
+      });
+      return;
+    }
+
+    // Fetch fresh session from storage to get subagentHistory
+    const fresh = await window.manong.session.get(session.id);
+    const resolved = fresh ?? session;
+
     set({
-      currentSession: session,
-      currentSessionId: session?.id ?? null,
-      todos: session?.todos || [],
-    }),
+      currentSession: resolved,
+      currentSessionId: resolved.id,
+      todos: resolved.todos || [],
+      subagentInfos: resolved.subagentHistory || [],
+      viewingSubagentId: null,
+      viewingSubagentSession: null,
+      subagentPendingMessages: [],
+      subagentStreamingMessage: null,
+      subagentRuntimeBySession: {},
+    });
+  },
 
   addSession: (session) =>
     set((state) => ({

@@ -1,4 +1,5 @@
 import React from 'react';
+import type { ReactNode } from 'react';
 import { ChevronRight, ChevronDown, Loader2, CheckCircle, XCircle, Clock } from 'lucide-react';
 import type { SubagentInfo } from '../../shared/types';
 import { useTranslation } from '../i18n';
@@ -11,6 +12,17 @@ const formatTokens = (count: number): string => {
   }
   return count.toString();
 };
+
+const CollapsibleContent: React.FC<{ expanded: boolean; children: ReactNode }> = ({ expanded, children }) => (
+  <div
+    className="grid transition-[grid-template-rows] duration-200 ease-out"
+    style={{ gridTemplateRows: expanded ? '1fr' : '0fr' }}
+  >
+    <div className="overflow-hidden">
+      {children}
+    </div>
+  </div>
+);
 
 const formatDuration = (startTime: number, endTime?: number): string => {
   const end = endTime || Date.now();
@@ -70,7 +82,7 @@ export const SubagentPanel: React.FC<SubagentPanelProps> = ({
           </span>
         )}
       </button>
-      {expanded && (
+      <CollapsibleContent expanded={expanded}>
         <div className="space-y-1">
           {subagentInfos.map((info) => (
             <button
@@ -105,7 +117,7 @@ export const SubagentPanel: React.FC<SubagentPanelProps> = ({
             </button>
           ))}
         </div>
-      )}
+      </CollapsibleContent>
     </div>
   );
 };
