@@ -24,6 +24,7 @@ No browser tabs. No copy-paste. Open a folder and start building.
 - **Direct file operations** — The agent reads, writes, searches, and edits files in your workspace. Not suggestions — actual changes.
 - **Shell execution** — Run commands, see output, diagnose errors, fix them in the same conversation.
 - **Extended thinking** — Watch the agent reason step-by-step before making changes.
+- **Plan mode** — Read-only analysis mode where the agent explores your codebase and produces actionable plans without making changes. Toggle in the UI or let the agent enter it when planning is needed.
 - **Subagents** — Spawn child agents to handle subtasks in parallel. Each subagent runs independently with its own tool set and step limit.
 - **Context compaction** — Automatic context management for long conversations. Prunes old tool results, summarizes history, and saves full transcripts to `.manong/transcripts/`.
 - **Auto session titles** — AI-generated session titles based on the first message.

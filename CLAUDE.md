@@ -85,6 +85,16 @@ src/
 - Streams events to renderer: `text_delta`, `thinking_delta`, `tool_call`, `tool_result`, `usage`, `compact`, `title-update`, `end`, `error`
 - Auto-generates session titles via `generateTitle()` — uses the provider to create a short title (max 6 words) from the first user message when the session title is still "New Session"
 
+### Plan Mode
+
+When `session.planMode === true`, the agent operates in a read-only analysis mode:
+- `AgentLoop` appends `PLAN_MODE_SUFFIX` to the system prompt, instructing the model to analyze and produce plans rather than make changes
+- Restricts tools to `PLAN_MODE_TOOLS`: `read_file`, `glob`, `grep`, `list_dir`, `lsp`, `exit_plan_mode`, `skill`
+- Plan tool implementation in `src/main/services/tools/plan.ts` handles the lifecycle (enter, exit, submit decisions)
+- Renderer toggles via `togglePlanMode` in the Zustand store, which calls `window.manong.plan.toggleMode()`
+- IPC channels: `PLAN_MODE_TOGGLE`, `PLAN_DECISION`
+- UI: `PlanView` component renders plan output and supports annotation/revision flows
+
 ### Subagent System
 
 `SubagentManager` (`src/main/services/agent/subagent.ts`) enables spawning child agent sessions:
@@ -157,6 +167,19 @@ toolRegistry.register(myTool);
 
 `src/main/services/skill/` loads markdown-based skill definitions from three sources: builtin, global (`~/.config/manong/skills/`), and project (`.manong/skills/`). Supports two patterns: top-level `.md` files, or subdirectories with `SKILL.md`. Skills are triggerable via the `skill` tool or slash commands in the chat input (`SlashCommandMenu` component).
 
+### IPC Handler Organization
+
+All IPC handlers are registered in a single `setupIPC(mainWindow)` function (`src/main/ipc/index.ts`). Handlers are grouped by functional area: Workspace, Session, Agent, Plan Mode, Config, File System, Window, Skills, Questions, MCP, Permission, Compact, LSP, Subagent. Channel constants are shared between processes via `src/shared/ipc.ts`.
+
+### i18n
+
+Translations live in `src/renderer/i18n/locales/`. The `en.ts` file defines the `Translations` type — all other locale files (e.g., `zh-CN.ts`) must conform to this shape, giving compile-time safety. To add a new string:
+1. Add the key/value to `en.ts`
+2. Add the corresponding translation to `zh-CN.ts` (and any other locales)
+3. Use `useTranslation()` hook in components (access via `t['key.name']`)
+
+Locale detection uses `navigator.language` with prefix-matching fallback (e.g., `zh-TW` → `zh-CN`), defaulting to `en`. Variable interpolation uses `tf(template, { name: value })` for `{name}` placeholders.
+
 ### Navigation & UI
 
 The renderer uses a navigation-view pattern (not a router):
@@ -208,7 +231,18 @@ window.manong.todo.onUpdate(callback)  // { sessionId, todos }
 
 ## Build Configuration
 
-Three separate Vite configs (`vite.main.config.ts`, `vite.preload.config.ts`, `vite.renderer.config.ts`). Electron Forge configured in `forge.config.ts` with security fuses (RunAsNode disabled, ASAR integrity enabled, cookie encryption enabled).
+Three separate Vite configs (`vite.main.config.ts`, `vite.preload.config.ts`, `vite.renderer.config.ts`). Electron Forge configured in `forge.config.ts` with security fuses (RunAsNode disabled, ASAR integrity enabled, cookie encryption enabled). No project-level `.eslintrc` file — linting relies on `@typescript-eslint` defaults via the `pnpm run lint` script.
+
+## Provider Configuration
+
+API credentials (Anthropic API key, base URL, model) are configured through the Settings UI and persisted via `electron-store` (not environment variables or `.env` files). `AgentLoop` requires `providerConfig` to be set or it returns an error. MCP server configs can include `envVars` for server-specific environment.
+
+## Project-Level `.manong/` Directory
+
+Workspaces can have a `.manong/` directory containing:
+- `skills/` — project-specific skill definitions (`.md` files or subdirectories with `SKILL.md`)
+- MCP project config — merged with global config from `~/.config/manong/`
+- `transcripts/` — full conversation transcripts saved during `fullCompact` (`transcript_<timestamp>.jsonl`)
 
 ## Tech Stack
 
