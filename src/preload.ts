@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from './shared/ipc';
-import type { Session, StreamEvent, AppConfig, Workspace, WorkspaceData, Skill, SkillExecuteResult, QuestionRequest, QuestionAnswer, Todo, ImagePart, Message } from './shared/types';
+import type { Session, StreamEvent, AppConfig, Workspace, WorkspaceData, Skill, SkillExecuteResult, QuestionRequest, QuestionAnswer, Todo, ImagePart, Message, SubagentInfo } from './shared/types';
 import type { MCPConfig, MCPServerStatus, LayeredMCPConfig } from './shared/mcp-types';
 import type { LSPServerStatus } from './shared/lsp-types';
 import type { PermissionMode, PermissionRequest, PermissionDecision, PermissionConfig, LayeredPermissionConfig } from './shared/permission-types';
@@ -235,6 +235,26 @@ const api = {
       ipcRenderer.on(IPC_CHANNELS.LSP_STATUS_CHANGED, handler);
       return () => {
         ipcRenderer.removeListener(IPC_CHANNELS.LSP_STATUS_CHANGED, handler);
+      };
+    },
+  },
+
+  subagent: {
+    getSession: (sessionId: string): Promise<Session | undefined> => {
+      return ipcRenderer.invoke(IPC_CHANNELS.SUBAGENT_GET_SESSION, sessionId);
+    },
+    onStatusUpdate: (callback: (info: SubagentInfo) => void) => {
+      const handler = (_event: unknown, info: SubagentInfo) => callback(info);
+      ipcRenderer.on(IPC_CHANNELS.SUBAGENT_STATUS_UPDATE, handler);
+      return () => {
+        ipcRenderer.removeListener(IPC_CHANNELS.SUBAGENT_STATUS_UPDATE, handler);
+      };
+    },
+    onStream: (callback: (event: StreamEvent) => void) => {
+      const handler = (_event: unknown, event: StreamEvent) => callback(event);
+      ipcRenderer.on(IPC_CHANNELS.SUBAGENT_STREAM, handler);
+      return () => {
+        ipcRenderer.removeListener(IPC_CHANNELS.SUBAGENT_STREAM, handler);
       };
     },
   },

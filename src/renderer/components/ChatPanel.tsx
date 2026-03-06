@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
-import { Image, ArrowUp, Square, Shield, ShieldCheck, ShieldOff } from 'lucide-react';
+import { Image, ArrowUp, Square, Shield, ShieldCheck, ShieldOff, ArrowLeft } from 'lucide-react';
 import { useAppStore } from '../stores/app';
 import { TimelineBlockView } from './TimelineBlockView';
 import { QuestionCard } from './QuestionCard';
@@ -14,6 +14,15 @@ import type { TranslationKey } from '../i18n';
 
 const isMac = window.manong.platform === 'darwin';
 const SLASH_COMMAND_PATTERN = /^\/(\w+)(?:\s+(.*))?$/;
+
+const formatTokens = (count: number): string => {
+  if (count >= 1000000) {
+    return `${(count / 1000000).toFixed(1)}M`;
+  } else if (count >= 1000) {
+    return `${(count / 1000).toFixed(1)}K`;
+  }
+  return count.toString();
+};
 
 export const ChatPanel: React.FC = () => {
   const {
@@ -35,6 +44,13 @@ export const ChatPanel: React.FC = () => {
     setPendingPermission,
     respondPermission,
     setPermissionMode,
+    viewingSubagentId,
+    viewingSubagentSession,
+    subagentInfos,
+    subagentPendingMessages,
+    subagentStreamingMessage,
+    setViewingSubagent,
+    handleSubagentStreamEvent,
   } = useAppStore();
 
   const [input, setInput] = useState('');
@@ -116,6 +132,13 @@ export const ChatPanel: React.FC = () => {
     });
     return unsubscribe;
   }, [setPendingPermission]);
+
+  useEffect(() => {
+    const unsubscribe = window.manong.subagent.onStream((event) => {
+      handleSubagentStreamEvent(event);
+    });
+    return unsubscribe;
+  }, [handleSubagentStreamEvent]);
 
   // CustomEvent listeners for keyboard shortcuts
   useEffect(() => {
@@ -415,6 +438,26 @@ export const ChatPanel: React.FC = () => {
     isStreaming
   );
 
+  const viewingSubagentInfo = useMemo(() => {
+    if (!viewingSubagentId) return null;
+    return subagentInfos.find(info => info.id === viewingSubagentId) || null;
+  }, [viewingSubagentId, subagentInfos]);
+
+  const isViewingSubagent = viewingSubagentId !== null;
+
+  const subagentTimelineBlocks = useMemo(() => {
+    if (!isViewingSubagent || !viewingSubagentSession) return [];
+    const allMessages = [...viewingSubagentSession.messages, ...subagentPendingMessages];
+    const subagentIsStreaming = viewingSubagentInfo?.status === 'running';
+    return messagesToTimeline(allMessages, subagentIsStreaming ? subagentStreamingMessage : null);
+  }, [isViewingSubagent, viewingSubagentSession, subagentPendingMessages, subagentStreamingMessage, viewingSubagentInfo]);
+
+  const subagentHasMessages = viewingSubagentSession && (
+    viewingSubagentSession.messages.length > 0 ||
+    subagentPendingMessages.length > 0 ||
+    viewingSubagentInfo?.status === 'running'
+  );
+
   // Shared input box JSX
   const inputBox = (
     <div className="w-full max-w-3xl pointer-events-auto relative">
@@ -560,7 +603,7 @@ export const ChatPanel: React.FC = () => {
   );
 
   // Hero Prompt mode — no messages yet
-  if (!hasMessages) {
+  if (!hasMessages && !isViewingSubagent) {
     return (
       <main className="flex-1 flex flex-col bg-background relative" onPaste={handlePaste} onDragOver={handleDragOver} onDrop={handleDrop}>
         <div className="flex-1 flex items-center justify-center px-4">
@@ -576,6 +619,64 @@ export const ChatPanel: React.FC = () => {
             </div>
             {/* Input box */}
             {inputBox}
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // Subagent viewing mode
+  if (isViewingSubagent) {
+    return (
+      <main className="flex-1 flex flex-col bg-background relative" onPaste={handlePaste} onDragOver={handleDragOver} onDrop={handleDrop}>
+        {/* Subagent header */}
+        <div className="border-b border-border px-4 py-3 flex items-center gap-3">
+          <button
+            onClick={() => setViewingSubagent(null)}
+            className="p-1.5 text-text-secondary hover:text-text-primary hover:bg-hover rounded-md transition-colors"
+            title={t['sidebar.backToMain']}
+          >
+            <ArrowLeft size={16} strokeWidth={1.5} />
+          </button>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono text-text-secondary uppercase">
+                {viewingSubagentInfo?.agentType || 'subagent'}
+              </span>
+              {viewingSubagentInfo?.status === 'running' && (
+                <span className="text-[10px] text-primary flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary streaming-indicator" />
+                  {t['chat.processing']}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-text-primary truncate">
+              {viewingSubagentInfo?.taskDescription || t['sidebar.subagentSession']}
+            </p>
+          </div>
+          {viewingSubagentInfo?.tokenUsage && (
+            <span className="text-[10px] text-text-secondary font-mono">
+              {formatTokens(viewingSubagentInfo.tokenUsage.inputTokens + viewingSubagentInfo.tokenUsage.outputTokens)} {t['info.tokens'].toLowerCase()}
+            </span>
+          )}
+        </div>
+
+        {/* Subagent messages */}
+        <div className={`flex-1 overflow-y-auto px-4 ${pendingPermission || pendingQuestion ? 'pb-56' : 'pb-8'}`}>
+          <div className="max-w-4xl mx-auto pt-4">
+            {subagentHasMessages ? (
+              <>
+                {subagentTimelineBlocks.map((block) => (
+                  <TimelineBlockView key={block.id} block={block} />
+                ))}
+              </>
+            ) : (
+              <div className="flex items-center justify-center h-32 text-text-secondary text-sm">
+                {viewingSubagentInfo?.status === 'running' ? t['info.processing'] : t['sidebar.noMessages']}
+              </div>
+            )}
+
+            <div ref={messagesEndRef} className="h-4" />
           </div>
         </div>
       </main>

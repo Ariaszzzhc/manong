@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import type { Session, Message, AppConfig, StreamEvent, Workspace, WorkspaceData, Skill, QuestionRequest, Todo } from '../../shared/types';
+import type { Session, Message, AppConfig, StreamEvent, Workspace, WorkspaceData, Skill, QuestionRequest, Todo, SubagentInfo } from '../../shared/types';
 import type { MCPServerStatus, MCPConfig, LayeredMCPConfig } from '../../shared/mcp-types';
 import type { PermissionMode, PermissionRequest, PermissionDecision } from '../../shared/permission-types';
 
@@ -39,6 +39,13 @@ interface AppState {
 
   // Skills
   skills: Skill[];
+
+  // Subagent state
+  subagentInfos: SubagentInfo[];
+  viewingSubagentId: string | null;
+  viewingSubagentSession: Session | null;
+  subagentPendingMessages: Message[];
+  subagentStreamingMessage: Message | null;
 
   // Workspace Actions
   setWorkspace: (data: WorkspaceData | null) => void;
@@ -84,6 +91,12 @@ interface AppState {
   setMCPLayeredConfig: (config: LayeredMCPConfig) => void;
   loadMCPStatus: () => Promise<void>;
   loadMCPLayeredConfig: () => Promise<void>;
+
+  // Subagent Actions
+  updateSubagentInfo: (info: SubagentInfo) => void;
+  setViewingSubagent: (sessionId: string | null) => void;
+  loadViewingSubagentSession: (sessionId: string) => Promise<void>;
+  handleSubagentStreamEvent: (event: StreamEvent) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -104,6 +117,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   mcpLayeredConfig: null,
   config: null,
   skills: [],
+  subagentInfos: [],
+  viewingSubagentId: null,
+  viewingSubagentSession: null,
+  subagentPendingMessages: [],
+  subagentStreamingMessage: null,
 
   // =====================
   // Workspace Actions
@@ -517,6 +535,171 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ mcpLayeredConfig: config, mcpConfig: config.merged });
     } catch (error) {
       console.error('Failed to load MCP layered config:', error);
+    }
+  },
+
+  // =====================
+  // Subagent Actions
+  // =====================
+
+  updateSubagentInfo: (info) => {
+    set((state) => {
+      const existingIdx = state.subagentInfos.findIndex(i => i.id === info.id);
+      let newInfos: SubagentInfo[];
+      if (existingIdx >= 0) {
+        newInfos = [...state.subagentInfos];
+        newInfos[existingIdx] = info;
+      } else {
+        newInfos = [...state.subagentInfos, info];
+      }
+      return { subagentInfos: newInfos };
+    });
+  },
+
+  setViewingSubagent: (sessionId) => {
+    if (sessionId === null) {
+      set({
+        viewingSubagentId: null,
+        viewingSubagentSession: null,
+        subagentPendingMessages: [],
+        subagentStreamingMessage: null,
+      });
+    } else {
+      set({ viewingSubagentId: sessionId });
+    }
+  },
+
+  loadViewingSubagentSession: async (sessionId) => {
+    try {
+      const session = await window.manong.subagent.getSession(sessionId);
+      set({ viewingSubagentSession: session ?? null });
+    } catch (error) {
+      console.error('Failed to load subagent session:', error);
+    }
+  },
+
+  handleSubagentStreamEvent: (event) => {
+    const state = get();
+    if (state.viewingSubagentId !== event.sessionId) return;
+
+    if (event.type === 'message-start') {
+      set({
+        subagentPendingMessages: [],
+        subagentStreamingMessage: {
+          id: event.messageId,
+          role: 'assistant',
+          parts: [],
+          createdAt: Date.now(),
+        },
+      });
+    } else if (event.type === 'message-continue') {
+      const pending = [...state.subagentPendingMessages];
+      if (state.subagentStreamingMessage && state.subagentStreamingMessage.parts.length > 0) {
+        pending.push(state.subagentStreamingMessage);
+      }
+      set({
+        subagentPendingMessages: pending,
+        subagentStreamingMessage: {
+          id: event.messageId,
+          role: 'assistant',
+          parts: [],
+          createdAt: Date.now(),
+        },
+      });
+    } else if (event.type === 'text-delta') {
+      set((s) => {
+        if (!s.subagentStreamingMessage) return s;
+        const parts = [...s.subagentStreamingMessage.parts];
+        const lastPart = parts[parts.length - 1];
+        if (lastPart && lastPart.type === 'text') {
+          parts[parts.length - 1] = { ...lastPart, text: lastPart.text + event.delta };
+        } else {
+          parts.push({ type: 'text', text: event.delta ?? '' });
+        }
+        return { subagentStreamingMessage: { ...s.subagentStreamingMessage, parts } };
+      });
+    } else if (event.type === 'thinking-delta') {
+      set((s) => {
+        if (!s.subagentStreamingMessage) return s;
+        const parts = [...s.subagentStreamingMessage.parts];
+        const thinkingIdx = parts.findIndex((p) => p.type === 'thinking');
+        if (thinkingIdx >= 0) {
+          const tp = parts[thinkingIdx];
+          if (tp.type === 'thinking') {
+            parts[thinkingIdx] = { ...tp, text: tp.text + event.delta };
+          }
+        } else {
+          parts.unshift({ type: 'thinking', text: event.delta ?? '' });
+        }
+        return { subagentStreamingMessage: { ...s.subagentStreamingMessage, parts } };
+      });
+    } else if (event.type === 'tool-call') {
+      set((s) => {
+        if (!s.subagentStreamingMessage) return s;
+        return {
+          subagentStreamingMessage: {
+            ...s.subagentStreamingMessage,
+            parts: [
+              ...s.subagentStreamingMessage.parts,
+              {
+                type: 'tool-call',
+                toolCallId: event.toolCallId ?? '',
+                toolName: event.toolName ?? '',
+                args: event.args ?? {},
+              },
+            ],
+          },
+        };
+      });
+    } else if (event.type === 'tool-result') {
+      set((s) => {
+        const pending = [...s.subagentPendingMessages];
+        if (s.subagentStreamingMessage && s.subagentStreamingMessage.parts.length > 0) {
+          pending.push(s.subagentStreamingMessage);
+        }
+        pending.push({
+          id: uuidv4(),
+          role: 'user',
+          parts: [
+            {
+              type: 'tool-result',
+              toolCallId: event.toolCallId ?? '',
+              toolName: event.toolName ?? '',
+              result: event.result,
+              isError: event.isError,
+              diff: event.diff,
+            },
+          ],
+          createdAt: Date.now(),
+        });
+        return {
+          subagentPendingMessages: pending,
+          subagentStreamingMessage: null,
+        };
+      });
+    } else if (event.type === 'message-complete') {
+      const session = state.viewingSubagentSession;
+      if (session) {
+        const pending = [...state.subagentPendingMessages];
+        if (state.subagentStreamingMessage && state.subagentStreamingMessage.parts.length > 0) {
+          pending.push(state.subagentStreamingMessage);
+        }
+        const updatedSession = {
+          ...session,
+          messages: [...session.messages, ...pending],
+          updatedAt: Date.now(),
+        };
+        set({
+          viewingSubagentSession: updatedSession,
+          subagentPendingMessages: [],
+          subagentStreamingMessage: null,
+        });
+      }
+    } else if (event.type === 'error') {
+      set({
+        subagentPendingMessages: [],
+        subagentStreamingMessage: null,
+      });
     }
   },
 }));

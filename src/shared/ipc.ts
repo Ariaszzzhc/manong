@@ -74,4 +74,9 @@ export const IPC_CHANNELS = {
   LSP_GET_STATUS: 'lsp:get-status',
   LSP_SET_WORKSPACE: 'lsp:set-workspace',
   LSP_STATUS_CHANGED: 'lsp:status-changed',
+
+  // Subagent
+  SUBAGENT_STATUS_UPDATE: 'subagent:status-update',
+  SUBAGENT_STREAM: 'subagent:stream',
+  SUBAGENT_GET_SESSION: 'subagent:get-session',
 } as const;

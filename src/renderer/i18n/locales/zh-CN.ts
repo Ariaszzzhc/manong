@@ -23,6 +23,11 @@ export const zhCN: Translations = {
   'sidebar.contextUsage': '上下文使用',
   'sidebar.tokens': '{count} 令牌',
   'sidebar.filesChanged': '文件变更',
+  'sidebar.subagents': '子代理',
+  'sidebar.subagentsRunning': '运行中',
+  'sidebar.subagentSession': '子代理会话',
+  'sidebar.backToMain': '返回主聊天',
+  'sidebar.noMessages': '暂无消息',
 
   // Welcome
   'welcome.title': 'Manong',

@@ -94,6 +94,7 @@ export interface Session {
   todos?: Todo[];
   parentSessionId?: string;
   agentType?: string;
+  subagentHistory?: SubagentInfo[];
 }
 
 // Workspace - represents a working directory context
@@ -241,4 +242,18 @@ export interface TaskToolParams {
 export interface TaskToolResult {
   taskId: string;
   summary: string;
+}
+
+export type SubagentStatus = 'pending' | 'running' | 'completed' | 'error';
+
+export interface SubagentInfo {
+  id: string;
+  parentSessionId: string;
+  agentType: string;
+  taskDescription: string;
+  status: SubagentStatus;
+  startTime: number;
+  endTime?: number;
+  tokenUsage?: TokenUsage;
+  error?: string;
 }

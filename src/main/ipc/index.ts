@@ -23,6 +23,7 @@ import {
 } from '../services/tools/ask';
 import { setTodoWindow } from '../services/tools/todo';
 import { permissionService } from '../services/permission';
+import { subagentManager } from '../services/agent/subagent';
 import '../services/tools';
 
 const agentLoops = new Map<string, AgentLoop>();
@@ -39,6 +40,9 @@ export function setupIPC(mainWindow: BrowserWindow): void {
 
   // Set the window reference for permission service
   permissionService.setWindow(mainWindow);
+
+  // Set the window reference for subagent manager
+  subagentManager.setMainWindow(mainWindow);
 
   // =====================
   // Workspace Management
@@ -413,5 +417,15 @@ export function setupIPC(mainWindow: BrowserWindow): void {
     if (!mainWindow.isDestroyed()) {
       mainWindow.webContents.send(IPC_CHANNELS.LSP_STATUS_CHANGED, statuses);
     }
+  });
+
+  // =====================
+  // Subagent Management
+  // =====================
+
+  ipcMain.handle(IPC_CHANNELS.SUBAGENT_GET_SESSION, async (_event, sessionId: string) => {
+    const workspacePath = storageService.getCurrentWorkspacePath();
+    if (!workspacePath) return undefined;
+    return storageService.getSession(workspacePath, sessionId);
   });
 }

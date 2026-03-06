@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, Code, ChevronRight, ChevronDown, Circle, CircleDot, CheckCircle, Trash2 } from 'lucide-react';
 import { useAppStore } from '../stores/app';
 import { useTranslation, tf } from '../i18n';
 import { shortcutTitle } from '../hooks/useShortcutHint';
-import type { FileDiffInfo } from '../../shared/types';
+import type { FileDiffInfo, SubagentInfo } from '../../shared/types';
+import { SubagentPanel } from './SubagentPanel';
 
 const formatTokens = (count: number): string => {
   if (count >= 1000000) {
@@ -15,12 +16,36 @@ const formatTokens = (count: number): string => {
 };
 
 export const Sidebar: React.FC = () => {
-  const { sessions, currentSessionId, setCurrentSession, deleteSession, todos, pendingMessages } =
-    useAppStore();
+  const {
+    sessions,
+    currentSessionId,
+    setCurrentSession,
+    deleteSession,
+    todos,
+    pendingMessages,
+    subagentInfos,
+    viewingSubagentId,
+    setViewingSubagent,
+    loadViewingSubagentSession,
+    updateSubagentInfo,
+  } = useAppStore();
   const t = useTranslation();
   const [tasksExpanded, setTasksExpanded] = useState(true);
   const [filesExpanded, setFilesExpanded] = useState(true);
   const [historyExpanded, setHistoryExpanded] = useState(false);
+  const [subagentsExpanded, setSubagentsExpanded] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = window.manong.subagent.onStatusUpdate((info) => {
+      updateSubagentInfo(info);
+    });
+    return unsubscribe;
+  }, [updateSubagentInfo]);
+
+  const handleSelectSubagent = async (info: SubagentInfo) => {
+    setViewingSubagent(info.id);
+    await loadViewingSubagentSession(info.id);
+  };
 
   const handleNewSession = async () => {
     const session = await window.manong.session.create();
@@ -135,6 +160,15 @@ export const Sidebar: React.FC = () => {
             )}
           </div>
         )}
+
+        {/* Subagents */}
+        <SubagentPanel
+          subagentInfos={subagentInfos}
+          expanded={subagentsExpanded}
+          onToggle={() => setSubagentsExpanded(!subagentsExpanded)}
+          viewingSubagentId={viewingSubagentId}
+          onSelectSubagent={handleSelectSubagent}
+        />
 
         {/* File Changes */}
         {fileChanges.length > 0 && (

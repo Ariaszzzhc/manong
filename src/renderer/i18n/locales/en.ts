@@ -21,6 +21,11 @@ export const en = {
   'sidebar.contextUsage': 'Context Usage',
   'sidebar.tokens': '{count} tokens',
   'sidebar.filesChanged': 'Files Changed',
+  'sidebar.subagents': 'Subagents',
+  'sidebar.subagentsRunning': 'running',
+  'sidebar.subagentSession': 'Subagent Session',
+  'sidebar.backToMain': 'Back to main chat',
+  'sidebar.noMessages': 'No messages yet',
 
   // Welcome
   'welcome.title': 'Manong',
