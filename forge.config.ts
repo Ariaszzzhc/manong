@@ -10,18 +10,14 @@ import { FuseV1Options, FuseVersion } from '@electron/fuses';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
-    executableName: 'Mineco',
+    executableName: 'mineco',
   },
   rebuildConfig: {},
   makers: [
     new MakerSquirrel({}),
     new MakerZIP({}, ['darwin']),
     new MakerRpm({}),
-    new MakerDeb({
-      options: {
-        bin: 'Mineco',
-      },
-    }),
+    new MakerDeb({}),
   ],
   plugins: [
     new VitePlugin({
