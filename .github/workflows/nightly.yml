@@ -56,12 +56,15 @@ jobs:
         include:
           - os: windows-latest
             platform: win32
+            arch: x64
             artifact: out/make/squirrel.windows/x64/
           - os: macos-latest
             platform: darwin
-            artifact: out/make/zip/darwin/x64/
+            arch: arm64
+            artifact: out/make/zip/darwin/arm64/
           - os: ubuntu-latest
             platform: linux
+            arch: x64
             artifact: out/make/deb/x64/
 
     runs-on: ${{ matrix.os }}
@@ -101,7 +104,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: mineco-${{ matrix.platform }}-x64
+          name: mineco-${{ matrix.platform }}-${{ matrix.arch }}
           path: ${{ matrix.artifact }}
           if-no-files-found: warn
           retention-days: 1
@@ -148,7 +151,7 @@ jobs:
             | 平台 | 文件 |
             |------|------|
             | 🪟 Windows | `Mineco-${{ steps.info.outputs.VERSION }} Setup.exe` |
-            | 🍎 macOS | `Mineco-${{ steps.info.outputs.VERSION }}-darwin-x64.zip` |
+            | 🍎 macOS | `Mineco-${{ steps.info.outputs.VERSION }}-darwin-arm64.zip` |
             | 🐧 Linux | `mineco_${{ steps.info.outputs.VERSION }}_amd64.deb` |
 
             ---
